@@ -1,0 +1,2178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Everybody up 5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+            color: #1e293b;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card-shadow:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .word-token {
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            font-size: 1.25rem;
+            padding: 0.5rem 1rem;
+        }
+        .word-token:hover {
+            transform: translateY(-2px) scale(1.05);
+        }
+        .word-card {
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .word-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.1);
+        }
+        #rearranged-word {
+            min-height: 4rem;
+        }
+        .match-card {
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .match-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        .match-selected {
+            border: 3px solid #f59e0b;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+        }
+        .pokeball-icon {
+            width: 30px;
+            height: 30px;
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .pokemon-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background-color: #f9fafb;
+            border-radius: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .pokemon-card:hover {
+            transform: scale(1.05);
+        }
+        .pokemon-img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        #new-pokemon-display .pokemon-img {
+             width: 150px;
+             height: 150px;
+        }
+        .pronounce-btn {
+            background-color: #38bdf8; /* sky-400 */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pronounce-btn:hover {
+            background-color: #0ea5e9; /* sky-500 */
+            transform: scale(1.1);
+        }
+        
+        .mic-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            background-image: linear-gradient(to right, #3b82f6, #6366f1);
+        }
+        .mic-btn:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+             transform: translateY(-2px);
+        }
+        .mic-btn.is-listening {
+            background-image: none;
+            background-color: #22c55e;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        .btn-primary {
+            color: white;
+            font-weight: bold;
+            border-radius: 9999px;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            background-image: linear-gradient(to right, #3b82f6, #06b6d4); /* blue-500 to cyan-500 */
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        
+        .btn-secondary {
+            background-image: linear-gradient(to right, #84cc16, #65a30d); /* lime-500 to lime-600 */
+            color: white;
+            font-weight: bold;
+            border-radius: 9999px;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            transition: all 0.2s ease-in-out;
+             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn-secondary:hover {
+            background-image: linear-gradient(to right, #65a30d, #4d7c0f); /* lime-600 to lime-700 */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+    </style>
+</head>
+<body class="min-h-screen">
+    
+
+<div class="container my-8">
+        
+        
+
+<header class="py-4 md:py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                
+
+<div class="text-center md:text-left mb-4 md:mb-0">
+                    <h1 class="text-4xl md:text-5xl font-bold text-blue-600 mb-2">Everybody up 5</h1>
+                    <p class="text-lg text-gray-500">讓我們一起用遊戲學英文！</p>
+                </div>
+                
+                
+
+<div class="flex items-center space-x-4">
+                    <div class="text-lg font-bold bg-white px-4 py-2 rounded-lg shadow">
+                        總分: <span id="total-score" class="text-amber-500">0</span>
+                    </div>
+                    <button id="my-pokemon-btn" class="btn-primary">我的寶可夢 (<span id="pokemon-count">0</span>)</button>
+                    <button id="leaderboard-btn" class="btn-primary">排行榜</button>
+                </div>
+            </div>
+            
+            
+
+<div class="text-center">
+                <div class="flex items-center justify-center space-x-4 text-xl">
+                    <span>單元進度球：</span>
+                    <div id="pokeball-container" class="flex items-center space-x-1"></div>
+                </div>
+                <div id="pokemon-reward-area" class="mt-2 text-xl font-bold text-red-500"></div>
+                <p id="pokemon-catch-condition" class="text-center text-gray-600 mt-1 font-semibold">每獲得 50 分，就有機會收服一隻新寶可夢！</p>
+            </div>
+        </header>
+
+        
+
+<nav class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4 mb-4 md:mb-8">
+            <div class="flex items-center space-x-2">
+                <label for="unit-select" class="text-lg font-bold">選擇單元:</label>
+                <select id="unit-select" class="px-3 py-2 rounded-lg border border-gray-300">
+                    <option value="u1">Unit 1</option>
+                    <option value="u2">Unit 2</option>
+                    <option value="u3">Unit 3</option>
+                    <option value="u4">Unit 4</option>
+                    <option value="u5">Unit 5</option>
+                    <option value="u6">Unit 6</option>
+                    <option value="u7">Unit 7</option>
+                    <option value="u8">Unit 8</option>
+                </select>
+                <button id="select-words-btn" class="btn-primary">選擇單字</button>
+            </div>
+            <div class="flex flex-wrap justify-center space-x-2 md:space-x-4">
+                <button id="btn-words-list" class="btn-secondary">單字卡</button>
+                <button id="btn-game-word-match" class="btn-secondary">單字配對</button>
+                <button id="btn-game-word-fill" class="btn-secondary">單字填空</button>
+                <button id="btn-game2" class="btn-secondary">單字重組</button>
+                <button id="btn-game-spelling" class="btn-secondary">單字拼寫</button>
+                <button id="btn-game4" class="btn-secondary">句子配對</button>
+                <button id="btn-game5" class="btn-secondary">句子重組</button>
+                <button id="btn-game6" class="btn-secondary">快問快答</button>
+                <button id="btn-game-speak-word" class="btn-secondary">AI口說(單字)</button>
+                <button id="btn-game-speak-sentence" class="btn-secondary">AI口說(句子)</button>
+                <button id="btn-game-grammar" class="btn-secondary">文法測驗</button>
+                <button id="btn-generate-quiz" class="btn-primary">生成考卷</button>
+            </div>
+        </nav>
+
+        
+
+<main id="game-area" class="p-4 md:p-6 bg-slate-50 rounded-2xl card-shadow min-h-[50vh] flex flex-col justify-center items-center text-center">
+            <p class="text-center text-md md:text-xl text-gray-400">請從上方選擇一個單元和遊戲開始！</p>
+        </main>
+        
+        
+
+<div id="feedback-message" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 px-6 py-3 bg-green-500 text-white rounded-full shadow-lg hidden"></div>
+        <div id="error-message" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 px-6 py-3 bg-red-500 text-white rounded-full shadow-lg hidden">答錯了! 請再試一次。</div>
+        <div id="pokeball-message" class="fixed bottom-16 left-1/2 transform -translate-x-1/2 px-6 py-3 bg-blue-500 text-white rounded-full shadow-lg hidden">恭喜你收集到一顆單元進度球！</div>
+
+    </div>
+
+    
+
+<div id="leaderboard-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold mb-6 text-blue-600">🏆 排行榜 🏆</h2>
+            <div id="leaderboard-list" class="space-y-2 text-left"></div>
+            <button id="close-leaderboard-btn" class="mt-6 px-6 py-2 rounded-full bg-slate-500 hover:bg-slate-600 text-white font-bold">關閉</button>
+        </div>
+    </div>
+
+    <div id="my-pokemon-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold mb-6 text-blue-600">🐾 我的寶可夢 🐾</h2>
+            <div id="my-pokemon-list" class="grid grid-cols-3 md:grid-cols-4 gap-4 max-h-64 overflow-y-auto p-2 bg-gray-100 rounded-lg"></div>
+            <button id="close-pokemon-btn" class="mt-6 px-6 py-2 btn-primary">關閉</button>
+        </div>
+    </div>
+    
+    <div id="new-pokemon-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold mb-4 text-blue-600">太棒了！</h2>
+            <p class="text-xl mb-4">你收服了一隻新的寶可夢！</p>
+            <div id="new-pokemon-display" class="pokemon-card bg-blue-100 py-6">
+                
+
+</div>
+            <button id="close-new-pokemon-btn" class="mt-6 px-6 py-2 btn-primary">繼續遊戲</button>
+        </div>
+    </div>
+
+    <div id="word-selection-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold mb-4 text-gray-700">選擇練習單字</h2>
+            <p id="word-selection-unit" class="text-lg mb-4 font-bold"></p>
+            <div class="flex justify-center space-x-4 mb-4">
+                <button id="select-all-words-btn" class="btn-primary">全選</button>
+                <button id="deselect-all-words-btn" class="btn-secondary">取消全選</button>
+            </div>
+            <div id="word-checkbox-list" class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto text-left border p-4 rounded-lg bg-gray-50">
+                
+
+</div>
+            <button id="save-word-selection-btn" class="mt-6 px-8 py-3 text-lg btn-primary">確認</button>
+        </div>
+    </div>
+
+    <div id="quiz-options-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold mb-4 text-gray-700">生成 A4 考卷</h2>
+            <div class="text-lg mb-6">
+                <p>您確定要為 <span id="quiz-unit-name" class="font-bold text-blue-600"></span> 生成一份隨機考卷嗎？</p>
+                <label for="quiz-question-count" class="font-bold mt-4">請選擇題數：</label>
+                <select id="quiz-question-count" class="px-3 py-2 rounded-lg border border-gray-300">
+                    <option value="20">20 題</option>
+                    <option value="30">30 題</option>
+                    <option value="40">40 題</option>
+                </select>
+            </div>
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-quiz-btn" class="px-8 py-3 rounded-full bg-gray-500 hover:bg-gray-600 text-white font-bold text-lg">取消</button>
+                <button id="confirm-generate-quiz-btn" class="px-8 py-3 text-lg btn-primary">確認生成</button>
+            </div>
+        </div>
+    </div>
+
+
+    
+
+<script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- 全域變數 ---
+        let db, auth, userId, userName;
+        let totalScore = 0;
+        let collectedPokemon = [];
+        const scorePerCorrect = 10;
+        const scoreForNewPokemon = 50; // 每50分獲得一隻
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const leaderboardCollectionPath = `/artifacts/${appId}/public/data/leaderboard`;
+
+        // --- Firebase 初始化與認證 ---
+        async function initFirebase() {
+            try {
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                userId = auth.currentUser.uid;
+                await loadUserData();
+
+            } catch (error) {
+                console.error("Firebase 初始化失敗:", error);
+            }
+        }
+        
+        // --- 使用者與分數處理 ---
+        async function loadUserData() {
+            const userDocRef = doc(db, leaderboardCollectionPath, userId);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (userDocSnap.exists()) {
+                const data = userDocSnap.data();
+                userName = data.name || `玩家${userId.substring(0, 6)}`;
+                totalScore = data.score || 0;
+                collectedPokemon = data.collectedPokemon || [];
+            } else {
+                // 新的匿名使用者，建立預設資料
+                userName = `玩家${userId.substring(0, 6)}`;
+                totalScore = 0;
+                collectedPokemon = [];
+                await saveUserData(); // 儲存這個新使用者
+            }
+            updateUIDisplays();
+        }
+
+        async function saveUserData() {
+            if (!db || !userId || !userName) return;
+            const userDocRef = doc(db, leaderboardCollectionPath, userId);
+            try {
+                await setDoc(userDocRef, { 
+                    name: userName, 
+                    score: totalScore,
+                    collectedPokemon: collectedPokemon
+                }, { merge: true });
+            } catch (error)
+            {
+                console.error("儲存使用者資料失敗:", error);
+            }
+        }
+
+        function updateUIDisplays() {
+            document.getElementById('total-score').textContent = totalScore;
+            document.getElementById('pokemon-count').textContent = collectedPokemon.length;
+        }
+
+        window.handleCorrectAnswer = (points = scorePerCorrect) => {
+            const oldScore = totalScore;
+            totalScore += points;
+            
+            if (Math.floor(oldScore / scoreForNewPokemon) < Math.floor(totalScore / scoreForNewPokemon)) {
+                grantPokemonReward();
+            }
+
+            updateUIDisplays();
+            saveUserData();
+            const feedbackMsg = document.getElementById('feedback-message');
+            feedbackMsg.textContent = `答對了! 🎉 +${points}分`;
+        };
+
+        // --- 排行榜處理 ---
+        async function showLeaderboard() {
+            if (!db) return;
+            const leaderboardList = document.getElementById('leaderboard-list');
+            leaderboardList.innerHTML = '<p>讀取中...</p>';
+            document.getElementById('leaderboard-modal').style.display = 'block';
+
+            try {
+                const q = query(collection(db, leaderboardCollectionPath));
+                const querySnapshot = await getDocs(q);
+                
+                const scores = [];
+                querySnapshot.forEach((doc) => { scores.push(doc.data()); });
+                scores.sort((a, b) => (b.score || 0) - (a.score || 0));
+                
+                leaderboardList.innerHTML = '';
+                if (scores.length === 0) {
+                    leaderboardList.innerHTML = '<p>目前沒有紀錄。</p>';
+                    return;
+                }
+
+                scores.slice(0, 10).forEach((data, index) => {
+                    const rank = index + 1;
+                    const rankEmoji = ["🥇", "🥈", "🥉"][rank - 1] || `${rank}.`;
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between p-2 rounded-lg';
+                    item.innerHTML = `
+                        <span class="font-bold text-lg w-12">${rankEmoji}</span>
+                        <span class="flex-1">${data.name || '匿名玩家'}</span>
+                        <span class="font-bold text-orange-500">${data.score || 0}分</span>
+                    `;
+                    leaderboardList.appendChild(item);
+                });
+
+            } catch (error) {
+                console.error("讀取排行榜失敗:", error);
+                leaderboardList.innerHTML = '<p>讀取排行榜失敗。</p>';
+            }
+        }
+        
+        // --- 寶可夢獎勵機制 ---
+        const POKEMON_LIST = [
+            { name: '妙蛙種子', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png' },
+            { name: '小火龍', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png' },
+            { name: '傑尼龜', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png' },
+            { name: '皮卡丘', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png' },
+            { name: '胖丁', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/39.png' },
+            { name: '卡比獸', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png' },
+            { name: '伊布', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png' },
+            { name: '可達鴨', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/54.png' },
+            { name: '喵喵', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/52.png' },
+            { name: '鯉魚王', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/129.png' },
+            { name: '耿鬼', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png' },
+            { name: '夢幻', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/151.png' },
+            { name: '果然翁', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/202.png' },
+            { name: '波克比', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/175.png' },
+            { name: '皮丘', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/172.png' },
+            { name: '木木梟', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/722.png' }
+        ];
+
+        function grantPokemonReward() {
+            const uncollectedPokemon = POKEMON_LIST.filter(p => !collectedPokemon.some(cp => cp.name === p.name));
+            if (uncollectedPokemon.length === 0) {
+                console.log("所有寶可夢都收集完畢！");
+                return;
+            }
+            const newPokemon = uncollectedPokemon[Math.floor(Math.random() * uncollectedPokemon.length)];
+            collectedPokemon.push(newPokemon);
+            showNewPokemonModal(newPokemon);
+        }
+
+        function showNewPokemonModal(pokemon) {
+            const display = document.getElementById('new-pokemon-display');
+            display.innerHTML = `<img src="${pokemon.imageUrl}" alt="${pokemon.name}" class="pokemon-img mx-auto"><p class="text-2xl font-bold mt-4">${pokemon.name}</p>`;
+            document.getElementById('new-pokemon-modal').style.display = 'block';
+        }
+
+        function showMyPokemon() {
+            const listDiv = document.getElementById('my-pokemon-list');
+            listDiv.innerHTML = '';
+            if (collectedPokemon.length === 0) {
+                listDiv.innerHTML = '<p class="col-span-full text-center text-gray-500">你還沒有收服任何寶可夢，快去玩遊戲吧！</p>';
+            } else {
+                collectedPokemon.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'pokemon-card';
+                    card.innerHTML = `<img src="${p.imageUrl}" alt="${p.name}" class="pokemon-img mx-auto" loading="lazy"><p class="font-bold mt-2 text-sm">${p.name}</p>`;
+                    listDiv.appendChild(card);
+                });
+            }
+            document.getElementById('my-pokemon-modal').style.display = 'block';
+        }
+        
+        // --- 事件監聽 ---
+        document.getElementById('leaderboard-btn').addEventListener('click', showLeaderboard);
+        document.getElementById('close-leaderboard-btn').addEventListener('click', () => {
+            document.getElementById('leaderboard-modal').style.display = 'none';
+        });
+
+        document.getElementById('my-pokemon-btn').addEventListener('click', showMyPokemon);
+        document.getElementById('close-pokemon-btn').addEventListener('click', () => {
+            document.getElementById('my-pokemon-modal').style.display = 'none';
+        });
+
+        document.getElementById('close-new-pokemon-btn').addEventListener('click', () => {
+            document.getElementById('new-pokemon-modal').style.display = 'none';
+            updateUIDisplays();
+            saveUserData();
+        });
+
+
+        // 啟動 Firebase
+        initFirebase();
+    </script>
+
+
+    <script>
+        // --- 遊戲核心邏輯 (非 Firebase) ---
+        const speechSynthesizer = window.speechSynthesis;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let voices = [];
+        let recognition;
+        let wordSelections = {}; // 用來儲存每個單元的單字選擇
+
+        function setVoice() {
+            voices = speechSynthesizer.getVoices().filter(voice => voice.lang.startsWith('en-'));
+        }
+
+        if (speechSynthesizer.onvoiceschanged !== undefined) {
+            speechSynthesizer.onvoiceschanged = setVoice;
+        }
+        setVoice();
+
+        /**
+         * 智慧化語音引擎 (Intelligent Voice Engine)
+         * - 自動偵測並優先選用最高品質的真人發音語音（高品質語音仰賴使用者作業系統與瀏覽器支援，例如 Edge/Chrome/Safari 的內建語音）。
+         * - 優先順序:
+         * 1. 已知的各平台高品質語音 (Google, Apple, Microsoft)
+         * 2. 雲端合成語音 (通常比本機語音更自然)
+         * 3. 任何可用的美式英語音
+         * - 此舉可大幅改善預設語音的機器人感
+         */
+        const speakWord = (text, rate = 1) => {
+            if (speechSynthesizer.speaking) {
+                speechSynthesizer.cancel(); 
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            let selectedVoice = null;
+            const premiumVoiceNames = ['google us english', 'samantha', 'alex', 'daniel', 'microsoft david desktop - english (united states)', 'microsoft zira desktop - english (united states)'];
+            selectedVoice = voices.find(voice => voice.lang === 'en-US' && premiumVoiceNames.includes(voice.name.toLowerCase()));
+            if (!selectedVoice) {
+                selectedVoice = voices.find(voice => voice.lang === 'en-US' && !voice.localService);
+            }
+            if (!selectedVoice) {
+                selectedVoice = voices.find(voice => voice.lang === 'en-US');
+            }
+            utterance.voice = selectedVoice || null;
+            utterance.lang = 'en-US';
+            utterance.pitch = 1; 
+            utterance.rate = rate;
+
+            speechSynthesizer.speak(utterance);
+        };
+        
+        function spellWordSlowly(word) {
+            if (speechSynthesizer.speaking) {
+                speechSynthesizer.cancel();
+            }
+            const letters = word.replace(/\s/g, '').split('');
+            let i = 0;
+
+            function speakNextLetter() {
+                if (i >= letters.length) {
+                    return; // All letters spoken
+                }
+
+                const utterance = new SpeechSynthesisUtterance(letters[i]);
+                
+                // Reuse the same high-quality voice selection logic
+                let selectedVoice = null;
+                const premiumVoiceNames = ['google us english', 'samantha', 'alex', 'daniel', 'microsoft david desktop - english (united states)', 'microsoft zira desktop - english (united states)'];
+                selectedVoice = voices.find(voice => voice.lang === 'en-US' && premiumVoiceNames.includes(voice.name.toLowerCase()));
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(voice => voice.lang === 'en-US' && !voice.localService);
+                }
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(voice => voice.lang === 'en-US');
+                }
+                utterance.voice = selectedVoice || null;
+                utterance.lang = 'en-US';
+                utterance.pitch = 1;
+                utterance.rate = 0.7; // Slower rate for each letter
+
+                utterance.onend = () => {
+                    i++;
+                    // Add a pause between letters for clarity
+                    setTimeout(speakNextLetter, 250); 
+                };
+                
+                utterance.onerror = (event) => {
+                    // "interrupted" error is expected if user clicks another speech button.
+                    // We can safely ignore it to avoid console clutter.
+                    if (event.error === 'interrupted') {
+                        return; 
+                    }
+                    console.error('Speech synthesis error:', event.error);
+                    i++;
+                    speakNextLetter(); // Try to continue with the next letter
+                };
+
+                speechSynthesizer.speak(utterance);
+            }
+
+            speakNextLetter();
+        }
+        
+        const pokeballSvg = `<svg class="pokeball-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="90" fill="white" stroke="black" stroke-width="10"/><path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="black" stroke-width="10" stroke-linecap="round"/><path d="M 10 100 A 90 90 0 0 0 190 100" fill="red"/><circle cx="100" cy="100" r="30" fill="white" stroke="black" stroke-width="10"/><circle cx="100" cy="100" r="15" fill="black"/></svg>`;
+
+        const pokeballContainer = document.getElementById('pokeball-container');
+        const pokemonRewardArea = document.getElementById('pokemon-reward-area');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const errorMessage = document.getElementById('error-message');
+        const pokeballMessage = document.getElementById('pokeball-message');
+        let pokeballCount = 0;
+        let completedGames = [];
+
+        function updatePokeballs() {
+            pokeballContainer.innerHTML = '';
+            for (let i = 0; i < pokeballCount; i++) {
+                pokeballContainer.innerHTML += pokeballSvg;
+            }
+            if (pokeballCount >= 4) {
+                pokemonRewardArea.textContent = `恭喜你，完成此單元4個遊戲!`;
+            } else {
+                pokemonRewardArea.textContent = `還差 ${4 - pokeballCount} 個進度球就可以完成此單元！`;
+            }
+        }
+        
+        function handleGameComplete(gameId) {
+            const unit = unitSelect.value;
+            const uniqueGameId = `${unit}-${gameId}`;
+            if (!completedGames.includes(uniqueGameId)) {
+                completedGames.push(uniqueGameId);
+                pokeballCount++;
+                updatePokeballs();
+                pokeballMessage.classList.remove('hidden');
+                setTimeout(() => pokeballMessage.classList.add('hidden'), 2000);
+            }
+        }
+        
+        function showCorrectMessage(points) {
+            const scoreToAward = points || 10;
+            if(typeof window.handleCorrectAnswer === 'function') {
+                window.handleCorrectAnswer(scoreToAward);
+            } else {
+                feedbackMessage.textContent = '答對了! 🎉';
+            }
+            feedbackMessage.classList.remove('hidden');
+            setTimeout(() => feedbackMessage.classList.add('hidden'), 1500);
+        }
+
+        function showErrorMessage() {
+            errorMessage.classList.remove('hidden');
+            setTimeout(() => errorMessage.classList.add('hidden'), 1500);
+        }
+        
+        // --- 遊戲數據 ---
+        const gameData = {
+            u1:{
+                words:[
+                    {word:"act in a play",chinese:"演戲",sentence:"She acted in a play."},
+                    {word:"learn how to dive",chinese:"學潛水",sentence:"I even learned to dive!"},
+                    {word:"ride a roller coaster",chinese:"搭雲霄飛車",sentence:"How did you feel when you rode a roller coaster?"},
+                    {word:"read a lot of books",chinese:"讀很多書",sentence:"She read a lot of books."},
+                    {word:"win a competition",chinese:"贏得比賽",sentence:"Danny wins the competition."},
+                    {word:"sleep late",chinese:"睡懶覺",sentence:"He slept late."},
+                    {word:"relaxed",chinese:"放鬆的",sentence:"I felt relaxed."},
+                    {word:"nervous",chinese:"緊張的",sentence:"He felt nervous about surfing."},
+                    {word:"confident",chinese:"有自信的",sentence:"Julie is confident."},
+                    {word:"shy",chinese:"害羞的",sentence:"Mike is shy."},
+                    {word:"wide-awake",chinese:"清醒的",sentence:"The next day, I felt wide-awake."},
+                    {word:"sleepy",chinese:"想睡的",sentence:"I was sleepy when we arrived at the hotel."},
+                    {word:"silk",chinese:"絲綢",sentence:"Many people traveled on this road to buy and sell silk."},
+                    {word:"goods",chinese:"商品",sentence:"...and other goods."},
+                    {word:"difficult",chinese:"困難的",sentence:"The trip was difficult and it took three years."},
+                    {word:"ruler",chinese:"統治者",sentence:"Marco met the ruler of China, Kublai Khan."},
+                    {word:"return",chinese:"返回",sentence:"Marco returned to Italy when he was 41."},
+                    {word:"become famous",chinese:"成名",sentence:"Many people read this book, and Marco became famous."}
+                ],
+                grammar: [
+                    { question: "A: What ___ she ___ on her vacation last year?\nB: She learned how to dive.", options: ["is, doing", "did, do", "does, do", "do, did"], answer: "did, do" },
+                    { question: "He ___ late yesterday morning.", options: ["sleeps", "sleeped", "slept", "is sleeping"], answer: "slept" },
+                    { question: "How ___ you feel when you rode the roller coaster?", options: ["do", "are", "did", "were"], answer: "did" },
+                    { question: "I ___ a lot of books during the summer.", options: ["read", "reads", "am reading", "have read"], answer: "read" },
+                    { question: "She ___ nervous before the competition.", options: ["feel", "felt", "feels", "is feeling"], answer: "felt" },
+                    { question: "They ___ a competition last week.", options: ["win", "won", "wins", "are winning"], answer: "won" },
+                    { question: "___ he act in the school play?", options: ["Do", "Does", "Did", "Is"], answer: "Did" },
+                    { question: "I wasn't sleepy, I was completely ___.", options: ["wide-awake", "shy", "confident", "relaxed"], answer: "wide-awake" },
+                    { question: "Marco Polo ___ to Italy when he was 41.", options: ["return", "returns", "returned", "is returning"], answer: "returned" },
+                    { question: "The trip on the Silk Road ___ very difficult.", options: ["is", "was", "are", "were"], answer: "was" }
+                ],
+                speakingWords:["act in a play", "learn how to dive", "ride a roller coaster", "read a lot of books", "win a competition", "sleep late", "relaxed", "nervous", "confident", "shy", "wide-awake", "sleepy", "silk", "goods", "difficult", "ruler", "return", "become famous"],
+                speakingSentences:["What did she do when she was on vacation?","She acted in a play.","How did you feel when you rode a roller coaster?","I felt relaxed, but she felt nervous.","Come on! Let's learn how to surf.","He started his travels on the Silk Road."],
+                wordFillIn:[
+                    {sentence:"She __ in a play on vacation.",chinese:"她在假期演了一齣戲。",answer:"acted"},
+                    {sentence:"I felt __ after the test.",chinese:"考完試後我感到很放鬆。",answer:"relaxed"},
+                    {sentence:"Marco Polo returned to __ when he was 41.",chinese:"馬可波羅41歲時回到義大利。",answer:"Italy"}
+                ],
+                sentenceMatch:[
+                    {question:"What did she do on vacation?",answer:"She acted in a play."},
+                    {question:"How did you feel when you rode the roller coaster?",answer:"I felt relaxed."},
+                    {question:"What did Marco Polo do when he was 17?",answer:"He started his travels on the Silk Road."}
+                ],
+                sentenceScramble:["She acted in a play.","I felt nervous about surfing.","Marco Polo became famous."],
+                popQuiz:[
+                    {question:"在遊樂園玩的刺激設施？",answer:"ride a roller coaster",options:["ride a roller coaster","sleep late","act in a play","win a competition"]},
+                    {question:"感到自在、不緊張的？",answer:"relaxed",options:["relaxed","nervous","confident","shy"]},
+                    {question:"古代中國出口的珍貴布料？",answer:"silk",options:["silk","goods","ruler","return"]}
+                ]
+            },
+            u2:{
+                words:[
+                    {word:"study insects",chinese:"研究昆蟲",sentence:"She was studying insects."},
+                    {word:"identify trees",chinese:"辨認樹木",sentence:"They also learned how to identify trees."},
+                    {word:"pick wild strawberries",chinese:"採野生草莓",sentence:"Let's pick wild strawberries."},
+                    {word:"find animal tracks",chinese:"尋找動物足跡",sentence:"They find some animal tracks."},
+                    {word:"explore a cave",chinese:"探索洞穴",sentence:"Let's explore it!"},
+                    {word:"collect leaves",chinese:"收集葉子",sentence:"She was collecting leaves."},
+                    {word:"set up the tent",chinese:"搭帳篷",sentence:"I was setting up the tent."},
+                    {word:"build a campfire",chinese:"生營火",sentence:"They learned how to build a campfire."},
+                    {word:"roast fish",chinese:"烤魚",sentence:"I was roasting fish."},
+                    {word:"tell stories",chinese:"說故事",sentence:"Let's tell stories."},
+                    {word:"put out the campfire",chinese:"熄滅營火",sentence:"Don't forget to put out the campfire."},
+                    {word:"look at the stars",chinese:"看星星",sentence:"I was looking at the stars."},
+                    {word:"oxygen",chinese:"氧氣",sentence:"Plants give us food, clothing, and oxygen."},
+                    {word:"seed",chinese:"種子",sentence:"Seeds come in many shapes and sizes."},
+                    {word:"size",chinese:"尺寸",sentence:"Seeds come in many shapes and sizes."},
+                    {word:"root",chinese:"根",sentence:"The roots of a plant usually grow underground."},
+                    {word:"underground",chinese:"地下的",sentence:"The roots of a plant usually grow underground."},
+                    {word:"stem",chinese:"莖",sentence:"The stem grows up from the roots."}
+                ],
+                grammar: [
+                    { question: "I ___ my homework when my mother came home.", options: ["did", "do", "was doing", "am doing"], answer: "was doing" },
+                    { question: "What ___ you doing when you saw the deer?", options: ["was", "are", "were", "did"], answer: "were" },
+                    { question: "She ___ insects in the garden this morning.", options: ["study", "is studying", "studied", "was studying"], answer: "was studying" },
+                    { question: "They ___ a campfire when it started to rain.", options: ["build", "were building", "built", "are building"], answer: "were building" },
+                    { question: "He fell asleep while he ___ at the stars.", options: ["was looking", "looked", "looks", "is looking"], answer: "was looking" },
+                    { question: "While I ___ fish, my brother was telling stories.", options: ["roast", "roasted", "was roasting", "am roasting"], answer: "was roasting" },
+                    { question: "___ she collecting leaves when you saw her?", options: ["Is", "Does", "Did", "Was"], answer: "Was" },
+                    { question: "We found animal tracks while we ___ in the forest.", options: ["hike", "hiked", "are hiking", "were hiking"], answer: "were hiking" },
+                    { question: "The phone rang while I ___ up the tent.", options: ["set", "was setting", "am setting", "have set"], answer: "was setting" },
+                    { question: "They ___ strawberries when they saw a snake.", options: ["were picking", "picked", "pick", "are picking"], answer: "were picking" }
+                ],
+                speakingWords:["study insects", "identify trees", "pick wild strawberries", "find animal tracks", "explore a cave", "collect leaves", "set up the tent", "build a campfire", "roast fish", "tell stories", "put out the campfire", "look at the stars", "oxygen", "seed", "size", "root", "underground", "stem"],
+                speakingSentences:["What was she doing in the morning?","She was studying insects.","When I arrived at the campsite, she was setting up the tent.","What were you doing when you saw the deer?","I was setting up the tent.","Which parts of the plant are these? Those are the seeds."],
+                wordFillIn:[
+                    {sentence:"I was __ up the tent when you arrived.",chinese:"你到的時候我正在搭帳篷。",answer:"setting"},
+                    {sentence:"Plants give us food, clothing, and __.",chinese:"植物給我們食物、衣服和氧氣。",answer:"oxygen"},
+                    {sentence:"The __ of a plant usually grow underground.",chinese:"植物的根通常長在地下。",answer:"roots"}
+                ],
+                sentenceMatch:[
+                    {question:"What was she doing in the morning?",answer:"She was studying insects."},
+                    {question:"What were you doing when you saw the deer?",answer:"I was setting up the tent."},
+                    {question:"What do seeds do?",answer:"They grow and become new plants."}
+                ],
+                sentenceScramble:["She was studying insects.","I was setting up the tent.","The roots grow underground."],
+                popQuiz:[
+                    {question:"在露營時住的地方？",answer:"set up the tent",options:["set up the tent","roast fish","explore a cave","study insects"]},
+                    {question:"植物吸收水分和養分的部分？",answer:"root",options:["root","stem","seed","oxygen"]},
+                    {question:"晚上在營火旁做的活動？",answer:"tell stories",options:["tell stories","identify trees","explore a cave","set up the tent"]}
+                ]
+            },
+            u3:{
+                words:[
+                    {word:"order pizzas",chinese:"訂披薩",sentence:"He'll order pizzas."},
+                    {word:"bake cupcakes",chinese:"烤杯子蛋糕",sentence:"Emma will bake the cupcakes."},
+                    {word:"bring fruit juice",chinese:"帶果汁",sentence:"Will you bring some fruit juice?"},
+                    {word:"choose the music",chinese:"選音樂",sentence:"Tommy will choose the music."},
+                    {word:"make decorations",chinese:"製作裝飾品",sentence:"I'll make some decorations."},
+                    {word:"buy balloons",chinese:"買氣球",sentence:"I'll buy some balloons."},
+                    {word:"pour the juice",chinese:"倒果汁",sentence:"Mr. Garcia will pour the juice."},
+                    {word:"serve the pizzas",chinese:"分披薩",sentence:"Who will serve the pizzas?"},
+                    {word:"set up the music",chinese:"設置音樂",sentence:"My brother will set it up on his computer."},
+                    {word:"blow up the balloons",chinese:"吹氣球",sentence:"Who will blow up the balloons?"},
+                    {word:"put up the decorations",chinese:"掛裝飾",sentence:"Mrs. Garcia will put up the decorations."},
+                    {word:"put out the cupcakes",chinese:"擺出杯子蛋糕",sentence:"Who will put out the cupcakes?"},
+                    {word:"celebrate",chinese:"慶祝",sentence:"People around the world like to celebrate."},
+                    {word:"season",chinese:"季節",sentence:"In each season, there are different celebrations."},
+                    {word:"tradition",chinese:"傳統",sentence:"Every celebration has special traditions."},
+                    {word:"delicious",chinese:"美味的",sentence:"Families will serve delicious food."},
+                    {word:"children",chinese:"孩子們",sentence:"Children will get a gift of money."},
+                    {word:"samba parade",chinese:"森巴遊行",sentence:"They'll watch singers and dancers in the samba parade."}
+                ],
+                grammar: [
+                    { question: "A: We're out of juice.\nB: Don't worry, I ___ some more from the store.", options: ["will get", "am getting", "got", "get"], answer: "will get" },
+                    { question: "What ___ he do for the party? He'll order pizzas.", options: ["does", "is", "will", "did"], answer: "will" },
+                    { question: "A: ___ she pour the juice?\nB: Yes, she will.", options: ["Does", "Is", "Did", "Will"], answer: "Will" },
+                    { question: "They ___ cupcakes for tomorrow's bake sale.", options: ["bake", "baked", "will bake", "are baking"], answer: "will bake" },
+                    { question: "Who ___ up the decorations? My mom will.", options: ["puts", "will put", "is putting", "put"], answer: "will put" },
+                    { question: "I don't think he ___ the music. He doesn't like pop.", options: ["chooses", "is choosing", "won't choose", "didn't choose"], answer: "won't choose" },
+                    { question: "A: It's cold in here.\nB: I ___ the window.", options: ["will close", "close", "am closing", "closed"], answer: "will close" },
+                    { question: "A: Who will serve the pizzas?\nB: Tom ___.", options: ["does", "is", "will", "did"], answer: "will" },
+                    { question: "She ___ buy balloons because we already have a lot.", options: ["will", "is", "won't", "doesn't"], answer: "won't" },
+                    { question: "___ you help me make the decorations?", options: ["Do", "Are", "Will", "Did"], answer: "Will" }
+                ],
+                speakingWords:["order pizzas", "bake cupcakes", "bring fruit juice", "choose the music", "make decorations", "buy balloons", "pour the juice", "serve the pizzas", "set up the music", "blow up the balloons", "put up the decorations", "put out the cupcakes", "celebrate", "season", "tradition", "delicious", "children", "samba parade"],
+                speakingSentences:["What will he do?","He'll order pizzas.","Will she pour the juice?","Yes, she will. / No, she won't.","Who will pour the juice? He will.","We're out of juice. Could you get some more?","What will people in Japan do in the spring? They'll celebrate Children's Day."],
+                wordFillIn:[
+                    {sentence:"He'll __ pizzas for the party.",chinese:"他會為派對訂披薩。",answer:"order"},
+                    {sentence:"Who will __ up the music?",chinese:"誰來設置音樂？",answer:"set"},
+                    {sentence:"In Brazil, people will celebrate __.",chinese:"在巴西，人們會慶祝嘉年華。",answer:"Carnival"}
+                ],
+                sentenceMatch:[
+                    {question:"What will he do?",answer:"He'll order pizzas."},
+                    {question:"Will she pour the juice?",answer:"Yes, she will."},
+                    {question:"What will people in China celebrate in the winter?",answer:"They will celebrate the Lunar New Year."}
+                ],
+                sentenceScramble:["He will order pizzas.","Who will pour the juice?","They will celebrate Carnival."],
+                popQuiz:[
+                    {question:"派對上常吃的食物？",answer:"order pizzas",options:["order pizzas","make decorations","play music","buy balloons"]},
+                    {question:"日本春天慶祝的節日？",answer:"celebrate",options:["celebrate","season","tradition","samba parade"]},
+                    {question:"形容食物很好吃？",answer:"delicious",options:["delicious","season","tradition","celebrate"]}
+                ]
+            },
+            u4:{
+                words:[
+                    {word:"colorful macaw",chinese:"彩色金剛鸚鵡",sentence:"The macaw is more colorful than the egret."},
+                    {word:"plain egret",chinese:"樸素的白鷺",sentence:"Is the macaw more colorful or plainer than the egret?"},
+                    {word:"dangerous jaguar",chinese:"危險的美洲豹",sentence:"Is the jaguar more dangerous?"},
+                    {word:"friendly river dolphin",chinese:"友善的河豚",sentence:"Which is friendlier?"},
+                    {word:"energetic spider monkey",chinese:"精力充沛的蜘蛛猴",sentence:"The spider monkey is energetic."},
+                    {word:"calm sloth",chinese:"冷靜的樹懶",sentence:"The sloth is calm."},
+                    {word:"easy puzzle",chinese:"簡單的拼圖",sentence:"This puzzle is the easiest one here."},
+                    {word:"difficult puzzle",chinese:"困難的拼圖",sentence:"Which puzzle is the most difficult?"},
+                    {word:"comfortable sandals",chinese:"舒服的涼鞋",sentence:"Which sandals are the most comfortable?"},
+                    {word:"uncomfortable sandals",chinese:"不舒服的涼鞋",sentence:"Those are uncomfortable sandals."},
+                    {word:"cheap bracelet",chinese:"便宜的手鍊",sentence:"This bracelet is cheaper."},
+                    {word:"expensive bracelet",chinese:"昂貴的手鍊",sentence:"That is an expensive bracelet."},
+                    {word:"natural community",chinese:"自然社群",sentence:"Biomes are natural communities of plants and animals."},
+                    {word:"freshwater",chinese:"淡水",sentence:"Lakes and rivers are freshwater."},
+                    {word:"desert",chinese:"沙漠",sentence:"Deserts are the driest and hottest biome."},
+                    {word:"forest",chinese:"森林",sentence:"This biome has many trees and plants."},
+                    {word:"grassland",chinese:"草原",sentence:"Grasslands have grass, but not many trees."},
+                    {word:"tundra",chinese:"凍原",sentence:"The tundra is the coldest biome."}
+                ],
+                grammar: [
+                    { question: "The macaw is ___ than the sloth.", options: ["colorful", "the most colorful", "colorfuller", "more colorful"], answer: "more colorful" },
+                    { question: "Which animal is ___, the spider monkey or the sloth?", options: ["energetic", "more energetic", "the most energetic", "energeticly"], answer: "more energetic" },
+                    { question: "Of all the biomes on Earth, the tundra is ___.", options: ["cold", "colder", "the coldest", "more cold"], answer: "the coldest" },
+                    { question: "This puzzle is ___ one in the store.", options: ["difficult", "more difficult", "the most difficult", "difficulter"], answer: "the most difficult" },
+                    { question: "These sandals are ___ than those shoes.", options: ["comfortable", "more comfortable", "the most comfortable", "comfortabler"], answer: "more comfortable" },
+                    { question: "Is the jaguar ___ or friendlier than the river dolphin?", options: ["dangerous", "more dangerous", "the most dangerous", "dangerouser"], answer: "more dangerous" },
+                    { question: "My bracelet was ___ one they had.", options: ["cheap", "cheaper", "the cheapest", "more cheap"], answer: "the cheapest" },
+                    { question: "The desert is the ___ biome.", options: ["drier", "dry", "driest", "most dry"], answer: "driest" },
+                    { question: "I think the egret is ___ than the macaw.", options: ["plain", "plainer", "the plainest", "more plain"], answer: "plainer" },
+                    { question: "Which biome is ___: the forest or the grassland?", options: ["big", "bigger", "the biggest", "most big"], answer: "bigger" }
+                ],
+                speakingWords:["colorful macaw", "plain egret", "dangerous jaguar", "friendly river dolphin", "energetic spider monkey", "calm sloth", "easy puzzle", "difficult puzzle", "comfortable sandals", "uncomfortable sandals", "cheap bracelet", "expensive bracelet", "natural community", "freshwater", "desert", "forest", "grassland", "tundra"],
+                speakingSentences:["The macaw is more colorful than the egret.","Is the macaw more colorful or plainer than the egret?","This puzzle is the easiest one here.","Which sandals are the most comfortable? These sandals.","Which biome is the biggest? The ocean."],
+                wordFillIn:[
+                    {sentence:"The macaw is more __ than the egret.",chinese:"金剛鸚鵡比白鷺更色彩鮮豔。",answer:"colorful"},
+                    {sentence:"This puzzle is the __ one here.",chinese:"這個拼圖是這裡最簡單的。",answer:"easiest"},
+                    {sentence:"The __ is the coldest biome.",chinese:"凍原是最冷的生物群系。",answer:"tundra"}
+                ],
+                sentenceMatch:[
+                    {question:"Is the macaw more colorful than the egret?",answer:"Yes, it is."},
+                    {question:"Which puzzle is the easiest?",answer:"This puzzle."},
+                    {question:"Which biome is the biggest on Earth?",answer:"The oceans are the biggest biome on Earth."}
+                ],
+                sentenceScramble:["The macaw is very colorful.","These sandals are the most comfortable.","The tundra is the coldest biome."],
+                popQuiz:[
+                    {question:"一種色彩鮮豔的大型鸚鵡？",answer:"colorful macaw",options:["colorful macaw","plain egret","calm sloth","dangerous jaguar"]},
+                    {question:"地球上最冷的生物群系？",answer:"tundra",options:["tundra","desert","forest","grassland"]},
+                    {question:"形容價格很高？",answer:"expensive bracelet",options:["expensive bracelet","easy puzzle","cheap bracelet","comfortable sandals"]}
+                ]
+            },
+            u5:{
+                words:[
+                    {word:"wash my hair",chinese:"洗頭髮",sentence:"Do you wash your hair before you go to bed?"},
+                    {word:"take a shower",chinese:"淋浴",sentence:"Take a shower often."},
+                    {word:"floss my teeth",chinese:"用牙線潔牙",sentence:"Floss my teeth once a day."},
+                    {word:"check my calendar",chinese:"查看日曆",sentence:"I should check my calendar."},
+                    {word:"pack my schoolbag",chinese:"整理書包",sentence:"He always packs his schoolbag."},
+                    {word:"iron my clothes",chinese:"燙衣服",sentence:"I need to iron my clothes."},
+                    {word:"slowly",chinese:"慢慢地",sentence:"He's walking slowly."},
+                    {word:"quickly",chinese:"快快地",sentence:"She is walking quickly."},
+                    {word:"carefully",chinese:"小心地",sentence:"He's writing carefully."},
+                    {word:"carelessly",chinese:"粗心地",sentence:"She is writing carelessly."},
+                    {word:"quietly",chinese:"安靜地",sentence:"She's talking quietly."},
+                    {word:"loudly",chinese:"大聲地",sentence:"He's talking loudly."},
+                    {word:"successful",chinese:"成功的",sentence:"To be a happy and successful student, you need to stay healthy."},
+                    {word:"exercise",chinese:"運動",sentence:"Try to get some exercise once or twice a day."},
+                    {word:"possible",chinese:"可能的",sentence:"When possible, go for a walk."},
+                    {word:"balanced meal",chinese:"均衡飲食",sentence:"It's important to eat balanced meals."},
+                    {word:"habit",chinese:"習慣",sentence:"Healthy habits are important."},
+                    {word:"early",chinese:"早點",sentence:"Go to bed early."}
+                ],
+                grammar: [
+                    { question: "She's a quiet student. She always does her work ___.", options: ["quiet", "quietly", "loudly", "more quiet"], answer: "quietly" },
+                    { question: "He's running very ___ to catch the bus.", options: ["quick", "quicker", "quickly", "quickest"], answer: "quickly" },
+                    { question: "How is he writing? He's writing ___.", options: ["careful", "carefully", "careless", "carelessly"], answer: "carefully" },
+                    { question: "Please don't talk so ___. The baby is sleeping.", options: ["loud", "louder", "loudly", "loudest"], answer: "loudly" },
+                    { question: "The turtle moves very ___.", options: ["slow", "slower", "slowly", "slowest"], answer: "slowly" },
+                    { question: "I ___ pack my schoolbag before I go to bed.", options: ["always", "never", "sometimes", "usually"], answer: "always" },
+                    { question: "She is walking ___ because she dropped her phone.", options: ["careful", "carefully", "careless", "carelessly"], answer: "carelessly" },
+                    { question: "Is she walking slowly or ___?", options: ["quick", "quicker", "quickly", "quickest"], answer: "quickly" },
+                    { question: "He ___ checks his calendar in the morning.", options: ["often", "never", "slowly", "loudly"], answer: "often" },
+                    { question: "Do you wash your hair ___ you go to bed?", options: ["after", "before", "when", "while"], answer: "before" }
+                ],
+                speakingWords:["wash my hair", "take a shower", "floss my teeth", "check my calendar", "pack my schoolbag", "iron my clothes", "slowly", "quickly", "carefully", "carelessly", "quietly", "loudly", "successful", "exercise", "possible", "balanced meal", "habit", "early"],
+                speakingSentences:["I always wash my hair before I go to bed.","Do you wash your hair before you go to bed?","How is she walking? She's walking slowly.","Is he walking slowly or quickly? He's walking slowly.","How often do you go for a walk? I sometimes go for a walk."],
+                wordFillIn:[
+                    {sentence:"I always __ my hair before bed.",chinese:"我總是在睡前洗頭。",answer:"wash"},
+                    {sentence:"He's walking __, not quickly.",chinese:"他走得很慢，不是很快。",answer:"slowly"},
+                    {sentence:"It's important to eat a __ meal.",chinese:"吃均衡的飲食很重要。",answer:"balanced"}
+                ],
+                sentenceMatch:[
+                    {question:"Do you always wash your hair before bed?",answer:"Yes, I always do."},
+                    {question:"How is she walking?",answer:"She's walking slowly."},
+                    {question:"How often should you exercise?",answer:"Try to get some exercise once or twice a day."}
+                ],
+                sentenceScramble:["I always wash my hair.","He is walking slowly.","Healthy habits are important."],
+                popQuiz:[
+                    {question:"形容動作不快？",answer:"slowly",options:["slowly","quickly","loudly","carefully"]},
+                    {question:"為了身體健康應該做的事？",answer:"exercise",options:["exercise","habit","possible","successful"]},
+                    {question:"睡前的好習慣？",answer:"floss my teeth",options:["floss my teeth","pack my schoolbag","check my calendar","iron my clothes"]}
+                ]
+            },
+            u6:{
+                words:[
+                    {word:"a cup of flour",chinese:"一杯麵粉",sentence:"He needs a cup of flour."},
+                    {word:"a half cup of water",chinese:"半杯水",sentence:"You need a half cup of water."},
+                    {word:"a quarter cup of salt",chinese:"四分之一杯鹽",sentence:"Add a quarter cup of salt."},
+                    {word:"a tablespoon of cooking oil",chinese:"一湯匙食用油",sentence:"He needs a tablespoon of cooking oil."},
+                    {word:"a teaspoon of baking soda",chinese:"一茶匙小蘇打",sentence:"You need a teaspoon of baking soda."},
+                    {word:"a drop of food coloring",chinese:"一滴食用色素",sentence:"Add a drop of food coloring."},
+                    {word:"aprons",chinese:"圍裙",sentence:"How many aprons do we have?"},
+                    {word:"toothpicks",chinese:"牙籤",sentence:"We need some toothpicks."},
+                    {word:"paper clips",chinese:"迴紋針",sentence:"They need a few paper clips."},
+                    {word:"cardboard",chinese:"紙板",sentence:"How much cardboard do we have?"},
+                    {word:"masking tape",chinese:"遮蔽膠帶",sentence:"We have a little masking tape."},
+                    {word:"modeling clay",chinese:"模型黏土",sentence:"They have a lot of modeling clay."},
+                    {word:"take",chinese:"花費(時間/人力)",sentence:"It took a lot of people to build it."},
+                    {word:"farmer",chinese:"農夫",sentence:"They were probably farmers."},
+                    {word:"artisan",chinese:"工匠",sentence:"They were probably artisans."},
+                    {word:"move",chinese:"移動",sentence:"The builders cut and moved these stones."},
+                    {word:"pull",chinese:"拉",sentence:"They pulled them many kilometers."},
+                    {word:"site",chinese:"地點",sentence:"...to the building site."}
+                ],
+                grammar: [
+                    { question: "___ aprons do we have for the art class? I see only a few.", options: ["How long", "How many", "How much", "How often"], answer: "How many" },
+                    { question: "___ modeling clay do you have? We have a lot.", options: ["How long", "How many", "How much", "How often"], answer: "How much" },
+                    { question: "He needs a ___ of flour for the recipe.", options: ["cup", "tablespoon", "teaspoon", "drop"], answer: "cup" },
+                    { question: "Do we have enough paper clips? No, we only have ___.", options: ["a few", "a little", "a lot of", "much"], answer: "a few" },
+                    { question: "How much masking tape is there? There is ___.", options: ["a few", "a little", "many", "three"], answer: "a little" },
+                    { question: "She added a ___ of blue food coloring to the water.", options: ["cup", "tablespoon", "teaspoon", "drop"], answer: "drop" },
+                    { question: "___ cardboard do they have? They have six sheets.", options: ["How many", "How much", "How", "What"], answer: "How much" },
+                    { question: "They don't have ___ toothpicks. They need to buy more.", options: ["many", "much", "a little", "some"], answer: "many" },
+                    { question: "I need just a ___ of salt, not a whole cup.", options: ["quarter cup", "tablespoon", "teaspoon", "half cup"], answer: "teaspoon" },
+                    { question: "Does she have enough flour? Yes, she has ___.", options: ["many", "a few", "a lot", "a little"], answer: "a lot" }
+                ],
+                speakingWords:["a cup of flour", "aprons", "toothpicks", "paper clips", "cardboard", "masking tape", "modeling clay", "take", "farmer", "artisan", "move", "pull", "site"],
+                speakingSentences:["How much flour does he need? He needs a cup of flour.","Does she have enough flour?","How many aprons do we have? We have three aprons.","How much cardboard do we have? We have six sheets of cardboard.","How many people did it take to build the Great Pyramid of Giza?"],
+                wordFillIn:[
+                    {sentence:"He needs a cup of __.",chinese:"他需要一杯麵粉。",answer:"flour"},
+                    {sentence:"How many __ do they have?",chinese:"他們有多少圍裙？",answer:"aprons"},
+                    {sentence:"It took about twenty years to __ the pyramid.",chinese:"建造金字塔大約花了二十年。",answer:"build"}
+                ],
+                sentenceMatch:[
+                    {question:"How much flour does he need?",answer:"He needs a cup of flour."},
+                    {question:"How many aprons do they have?",answer:"They have a few aprons."},
+                    {question:"How much time did it take to build the Great Pyramid?",answer:"It took about twenty years."}
+                ],
+                sentenceScramble:["He needs a cup of flour.","They have a few aprons.","It took twenty years to build."],
+                popQuiz:[
+                    {question:"烘焙時常用的白色粉末？",answer:"a cup of flour",options:["a cup of flour","a quarter cup of salt","a drop of food coloring","a teaspoon of baking soda"]},
+                    {question:"用來固定紙張的小工具？",answer:"paper clips",options:["paper clips","aprons","toothpicks","cardboard"]},
+                    {question:"古埃及金字塔的建造者可能是？",answer:"farmer",options:["farmer","ruler","student","teacher"]}
+                ]
+            },
+            u7:{
+                words:[
+                    {word:"India",chinese:"印度",sentence:"I've been to India."},
+                    {word:"Italy",chinese:"義大利",sentence:"I've never been to Italy."},
+                    {word:"Kenya",chinese:"肯亞",sentence:"Have you ever been to Kenya?"},
+                    {word:"New Zealand",chinese:"紐西蘭",sentence:"New Zealand was my favorite."},
+                    {word:"the UK",chinese:"英國",sentence:"He's been to the UK."},
+                    {word:"Peru",chinese:"秘魯",sentence:"I haven't been to Peru yet."},
+                    {word:"go rafting",chinese:"泛舟",sentence:"He has gone rafting."},
+                    {word:"ride a camel",chinese:"騎駱駝",sentence:"He hasn't ridden a camel."},
+                    {word:"climb a mountain",chinese:"爬山",sentence:"Has she climbed a mountain before?"},
+                    {word:"hike in a rainforest",chinese:"在雨林中健行",sentence:"Have you hiked in a rainforest before?"},
+                    {word:"see the pyramids",chinese:"看金字塔",sentence:"I want to see the pyramids."},
+                    {word:"go scuba diving",chinese:"水肺潛水",sentence:"I've gone scuba diving there."},
+                    {word:"high",chinese:"高的",sentence:"It's over 29,000 feet high."},
+                    {word:"reach",chinese:"到達",sentence:"They tried to reach the top of the mountain."},
+                    {word:"British",chinese:"英國的",sentence:"Twelve British mountain climbers wanted to climb to the top."},
+                    {word:"leave",chinese:"離開",sentence:"They left the camp on May 28th."},
+                    {word:"grateful",chinese:"感激的",sentence:"All of them were grateful to Edmund Hillary."},
+                    {word:"lead",chinese:"引領",sentence:"...for leading the way."}
+                ],
+                grammar: [
+                    { question: "A: ___ you ever ridden a camel?\nB: No, I never have.", options: ["Did", "Are", "Have", "Do"], answer: "Have" },
+                    { question: "She has ___ to Kenya before.", options: ["be", "being", "been", "was"], answer: "been" },
+                    { question: "He has gone rafting, but he ___ climbed a mountain.", options: ["has", "hasn't", "haven't", "is"], answer: "hasn't" },
+                    { question: "___ she ever hiked in a rainforest?", options: ["Has", "Have", "Did", "Does"], answer: "Has" },
+                    { question: "I've ___ seen the pyramids, but I want to.", options: ["ever", "never", "already", "just"], answer: "never" },
+                    { question: "They ___ to India twice.", options: ["has been", "have been", "was", "were"], answer: "have been" },
+                    { question: "My father has ___ scuba diving.", options: ["go", "went", "gone", "goes"], answer: "gone" },
+                    { question: "I haven't been to Peru ___.", options: ["already", "just", "never", "yet"], answer: "yet" },
+                    { question: "Has he ___ a camel before? Yes, he has.", options: ["ride", "rode", "ridden", "riding"], answer: "ridden" },
+                    { question: "We've ___ to the UK, but we haven't been to Italy.", options: ["be", "been", "being", "were"], answer: "been" }
+                ],
+                speakingWords:["India", "Italy", "Kenya", "New Zealand", "the UK", "Peru", "go rafting", "ride a camel", "climb a mountain", "hike in a rainforest", "see the pyramids", "go scuba diving", "high", "reach", "British", "leave", "grateful", "lead"],
+                speakingSentences:["I've been to India.","I've never been to Italy.","Has she ever been to India?","He has gone rafting, but he hasn't ridden a camel.","Has she gone rafting before?","Do you like skateboarding?","Could you show me how?"],
+                wordFillIn:[
+                    {sentence:"I've never been to __.",chinese:"我從未去過義大利。",answer:"Italy"},
+                    {sentence:"Has she ever __ a camel?",chinese:"她騎過駱駝嗎？",answer:"ridden"},
+                    {sentence:"Mount Qomolangma is the __ mountain in the world.",chinese:"珠穆朗瑪峰是世界上最高的山。",answer:"highest"}
+                ],
+                sentenceMatch:[
+                    {question:"Has she ever been to India?",answer:"Yes, she has."},
+                    {question:"Has he gone rafting before?",answer:"No, he hasn't."},
+                    {question:"What happened in 1953?",answer:"Edmund Hillary and Tenzing Norgay reached the top."}
+                ],
+                sentenceScramble:["I have never been to Italy.","He has gone rafting before.","She likes skateboarding."],
+                popQuiz:[
+                    {question:"一個亞洲國家，以咖哩聞名？",answer:"India",options:["India","Kenya","New Zealand","the UK"]},
+                    {question:"在水上進行的刺激活動？",answer:"go rafting",options:["go rafting","ride a camel","climb a mountain","hike in a rainforest"]},
+                    {question:"形容一個人不害怕危險？",answer:"grateful",options:["grateful","high","British","lead"]}
+                ]
+            },
+            u8:{
+                words:[
+                    {word:"turn on the computer",chinese:"打開電腦",sentence:"I've just turned on the computer."},
+                    {word:"turn off the computer",chinese:"關掉電腦",sentence:"Have you turned off the computer yet?"},
+                    {word:"turn up the volume",chinese:"調高音量",sentence:"Please turn up the volume."},
+                    {word:"turn down the volume",chinese:"調低音量",sentence:"Has he turned down the volume yet?"},
+                    {word:"log in to the website",chinese:"登入網站",sentence:"I've logged in to some interesting websites."},
+                    {word:"log out of the website",chinese:"登出網站",sentence:"Don't forget to log out of the website."},
+                    {word:"upload the photos",chinese:"上傳照片",sentence:"Has she uploaded the photos yet?"},
+                    {word:"print the photos",chinese:"列印照片",sentence:"She hasn't printed them yet."},
+                    {word:"download the music",chinese:"下載音樂",sentence:"I'm downloading music now."},
+                    {word:"play the music",chinese:"播放音樂",sentence:"I haven't played it yet."},
+                    {word:"write the email",chinese:"寫電子郵件",sentence:"He's already written the email."},
+                    {word:"send the email",chinese:"寄出電子郵件",sentence:"He hasn't sent it yet."},
+                    {word:"energy",chinese:"能源",sentence:"People are using more energy every day."},
+                    {word:"source",chinese:"來源",sentence:"These energy sources are clean."},
+                    {word:"wind turbine",chinese:"風力渦輪機",sentence:"Scientists have designed wind turbines."},
+                    {word:"electricity",chinese:"電力",sentence:"...that use strong winds to make electricity."},
+                    {word:"dam",chinese:"水壩",sentence:"Scientists have designed dams that make electricity."},
+                    {word:"solar panel",chinese:"太陽能板",sentence:"Scientists have designed solar panels."}
+                ],
+                grammar: [
+                    { question: "He's already written the email, but he hasn't sent it ___.", options: ["just", "already", "yet", "never"], answer: "yet" },
+                    { question: "I've ___ turned on the computer. It's starting now.", options: ["yet", "already", "just", "ever"], answer: "just" },
+                    { question: "Has she uploaded the photos ___?", options: ["yet", "already", "just", "never"], answer: "yet" },
+                    { question: "They have ___ downloaded the music. It's on the computer.", options: ["yet", "already", "just", "ever"], answer: "already" },
+                    { question: "A: Have you logged out?\nB: No, I haven't done it ___.", options: ["yet", "already", "just", "never"], answer: "yet" },
+                    { question: "She has ___ printed the photos. They are on the desk.", options: ["yet", "already", "just", "ever"], answer: "already" },
+                    { question: "I can't hear the music. Have you turned up the volume ___?", options: ["yet", "already", "just", "never"], answer: "yet" },
+                    { question: "He's ___ finished his homework. He can play now.", options: ["yet", "already", "just", "ever"], answer: "just" },
+                    { question: "I haven't played the new song ___, but I want to.", options: ["yet", "already", "just", "never"], answer: "yet" },
+                    { question: "Has he turned off the computer ___? The screen is still on.", options: ["yet", "already", "just", "never"], answer: "yet" }
+                ],
+                speakingWords:["turn on the computer", "turn off the computer", "turn up the volume", "turn down the volume", "log in to the website", "log out of the website", "upload the photos", "print the photos", "download the music", "play the music", "write the email", "send the email", "energy", "source", "wind turbine", "electricity", "dam", "solar panel"],
+                speakingSentences:["I've just turned on the computer.","Has he turned on the computer yet?","He's already written the email, but he hasn't sent it yet.","Has she uploaded the photos yet?","Are you almost done with the computer?","What have scientists designed to make electricity from wind?"],
+                wordFillIn:[
+                    {sentence:"I've just turned __ the computer.",chinese:"我剛打開電腦。",answer:"on"},
+                    {sentence:"Has she __ the photos yet?",chinese:"她上傳照片了嗎？",answer:"uploaded"},
+                    {sentence:"__ panels turn energy from the sun into electricity.",chinese:"太陽能板將太陽能轉化為電力。",answer:"Solar"}
+                ],
+                sentenceMatch:[
+                    {question:"Has he turned on the computer yet?",answer:"Yes, he has."},
+                    {question:"Has she uploaded the photos yet?",answer:"No, she hasn't uploaded them."},
+                    {question:"What have scientists designed to make electricity from wind?",answer:"They have designed wind turbines."}
+                ],
+                sentenceScramble:["Turn on the computer.","She has uploaded the photos.","Wind is a clean energy source."],
+                popQuiz:[
+                    {question:"使用電腦的第一步？",answer:"turn on the computer",options:["turn on the computer","log in to the website","upload the photos","download the music"]},
+                    {question:"從網路獲取檔案到你的電腦？",answer:"download the music",options:["download the music","upload the photos","print the documents","turn off the computer"]},
+                    {question:"一種可再生能源的來源？",answer:"wind turbine",options:["wind turbine","dam","solar panel","computer"]}
+                ]
+            }
+        };
+        
+        // --- 遊戲渲染邏輯 ---
+        const gameArea = document.getElementById('game-area');
+        const unitSelect = document.getElementById('unit-select');
+        let shuffledData = [];
+        let currentIndex = 0;
+        let currentGameId = null;
+
+        function cleanupCurrentGame() {
+            // 停止任何正在進行的語音合成
+            if (speechSynthesizer && speechSynthesizer.speaking) {
+                speechSynthesizer.cancel();
+            }
+            // 中止任何正在進行的語音辨識
+            if (recognition) {
+                recognition.abort();
+                recognition = null;
+            }
+        }
+
+        // 根據選擇的單字過濾遊戲資料
+        function getFilteredGameData(unit) {
+            const unitData = gameData[unit];
+            if (!unitData) return null;
+            const selectedWords = wordSelections[unit] || unitData.words.map(w => w.word);
+
+            if (selectedWords.length === 0) return null;
+
+            const filtered = {
+                words: unitData.words.filter(item => selectedWords.includes(item.word)),
+                speakingWords: unitData.speakingWords.filter(item => selectedWords.some(sw => item.toLowerCase().includes(sw.toLowerCase()))),
+                speakingSentences: unitData.speakingSentences.filter(item => selectedWords.some(sw => item.toLowerCase().includes(sw.toLowerCase()))),
+                wordFillIn: (unitData.wordFillIn || []).filter(item => selectedWords.some(sw => item.sentence.toLowerCase().includes(sw.toLowerCase()) || item.answer.toLowerCase() === sw.toLowerCase())),
+                sentenceMatch: (unitData.sentenceMatch || []).filter(item => selectedWords.some(sw => item.question.toLowerCase().includes(sw.toLowerCase()) || item.answer.toLowerCase().includes(sw.toLowerCase()))),
+                sentenceScramble: (unitData.sentenceScramble || []).filter(item => selectedWords.some(sw => item.toLowerCase().includes(sw.toLowerCase()))),
+                popQuiz: (unitData.popQuiz || []).filter(item => selectedWords.includes(item.answer))
+            };
+            return filtered;
+        }
+
+
+        function showGame(gameId) {
+            cleanupCurrentGame(); // 在開始新遊戲前，先清理舊的遊戲狀態
+            const unit = unitSelect.value;
+            let unitData;
+
+            if (gameId !== 'btn-game-grammar') {
+                 unitData = getFilteredGameData(unit);
+                 if (!unitData) {
+                    gameArea.innerHTML = `<p class="text-xl text-red-500 font-bold">請先透過「選擇單字」按鈕勾選至少一個單字！</p>`;
+                    return;
+                }
+            } else {
+                unitData = gameData[unit];
+            }
+           
+            currentGameId = gameId;
+            gameArea.innerHTML = '';
+            currentIndex = 0;
+            
+            const gameRenderers = {
+                'btn-words-list': { data: unitData.words, render: renderWordsList, min: 1},
+                'btn-game-word-match': { data: unitData.words, render: renderWordMatch, min: 2},
+                'btn-game-word-fill': { data: unitData.wordFillIn, render: renderWordFillIn, min: 1},
+                'btn-game2': { data: unitData.words, render: renderWordScramble, min: 1 },
+                'btn-game-spelling': { data: unitData.words, render: renderSpellingGame, min: 1 },
+                'btn-game4': { data: unitData.sentenceMatch, render: renderSentenceMatch, min: 1 },
+                'btn-game5': { data: unitData.sentenceScramble, render: renderSentenceScramble, min: 1 },
+                'btn-game6': { data: unitData.popQuiz, render: renderPopQuiz, min: 1 },
+                'btn-game-speak-word': { data: unitData.speakingWords, render: () => renderSpeakingGame('word'), min: 1},
+                'btn-game-speak-sentence': { data: unitData.speakingSentences, render: () => renderSpeakingGame('sentence'), min: 1},
+                'btn-game-grammar': { data: unitData.grammar, render: renderGrammarQuiz, min: 1}
+            };
+
+            const gameInfo = gameRenderers[gameId];
+
+            if (gameInfo && gameInfo.data && gameInfo.data.length > 0) {
+                 if (gameId !== 'btn-game-grammar' && gameInfo.data.length < gameInfo.min) {
+                     gameArea.innerHTML = `<p class="text-xl text-red-500 font-bold">請至少選擇 ${gameInfo.min} 個相關單字來進行此遊戲！</p>`;
+                     return;
+                 }
+                shuffledData = [...gameInfo.data].sort(() => 0.5 - Math.random());
+                if (gameId === 'btn-game-grammar' || gameId.startsWith('btn-game-speak')) {
+                    const questionCount = gameId.includes('sentence') ? 5 : 10;
+                    shuffledData = shuffledData.slice(0, questionCount);
+                }
+                gameInfo.render(shuffledData);
+            } else {
+                 gameArea.innerHTML = `<p class="text-xl text-orange-500 font-bold">這個遊戲目前沒有可用的題目，請選擇更多單字或嘗試其他遊戲！</p>`;
+            }
+        }
+        
+        function renderWordsList(data) {
+            gameArea.innerHTML = `<h2 class="text-2xl font-bold text-center mb-6 text-blue-600">單字卡學習區</h2><div id="words-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>`;
+            const wordsGrid = document.getElementById('words-grid');
+            data.forEach(word => {
+                const card = document.createElement('div');
+                card.className = 'word-card card-shadow';
+                card.innerHTML = `
+                    <div>
+                        <p class="text-2xl md:text-3xl font-bold text-gray-800">${word.word}</p>
+                        <p class="text-lg md:text-xl text-gray-600 mt-2">${word.chinese}</p>
+                        <p class="text-md text-gray-500 mt-2 italic cursor-pointer hover:text-blue-600" onclick="speakWord('${word.sentence.replace(/'/g, "\\'")}')">"${word.sentence}"</p>
+                    </div>
+                    <div class="flex justify-center items-center space-x-2 mt-4">
+                         <button class="pronounce-btn" title="正常速度" onclick="event.stopPropagation(); speakWord('${word.word.replace(/'/g, `\\'`).replace(/"/g, `\\"`)}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                         </button>
+                         <button class="pronounce-btn" title="念句子" onclick="event.stopPropagation(); speakWord('${word.sentence.replace(/'/g, `\\'`).replace(/"/g, `\\"`)}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                         </button>
+                    </div>
+                `;
+                card.onclick = () => speakWord(word.word);
+                wordsGrid.appendChild(card);
+            });
+        }
+        
+        function renderWordMatch() {
+            if (shuffledData.length === 0) {
+                 gameArea.innerHTML = '<p class="text-2xl font-bold text-green-600">恭喜你完成所有題目!</p>';
+                 handleGameComplete(currentGameId);
+                 return;
+            }
+            const totalWords = Math.min(6, shuffledData.length);
+            const currentSet = shuffledData.slice(0, totalWords);
+            shuffledData = shuffledData.slice(totalWords);
+            
+            const allWords = [...currentSet];
+            const allChinese = [...currentSet].sort(() => 0.5 - Math.random());
+            
+            gameArea.innerHTML = `<h2 class="text-2xl font-bold text-center mb-6 text-teal-600">單字配對</h2><div class="grid grid-cols-2 gap-4 md:gap-8 w-full max-w-2xl mx-auto"><div id="words-col" class="flex flex-col space-y-4"></div><div id="chinese-col" class="flex flex-col space-y-4"></div></div><div class="text-center mt-6"><p id="match-status" class="text-lg font-bold text-gray-500"></p></div>`;
+            
+            /*
+            setTimeout(() => {
+                speakWord("Let's play word match. Please select an English word.");
+            }, 100);
+            */
+
+            const wordsCol = document.getElementById('words-col');
+            const chineseCol = document.getElementById('chinese-col');
+            const matchStatus = document.getElementById('match-status');
+            
+            let selectedWordBtn = null;
+            let matchedCount = 0;
+            
+            allWords.forEach(item => {
+                const wordBtn = document.createElement('button');
+                wordBtn.textContent = item.word;
+                wordBtn.dataset.chinese = item.chinese;
+                wordBtn.className = 'match-card bg-sky-100 text-sky-800 text-left font-bold p-4 text-lg';
+                wordBtn.addEventListener('click', () => {
+                    if (selectedWordBtn) selectedWordBtn.classList.remove('match-selected');
+                    selectedWordBtn = wordBtn;
+                    wordBtn.classList.add('match-selected');
+                    speakWord(item.word);
+                });
+                wordsCol.appendChild(wordBtn);
+            });
+            
+            allChinese.forEach(item => {
+                const chineseBtn = document.createElement('button');
+                chineseBtn.textContent = item.chinese;
+                chineseBtn.className = 'match-card bg-amber-100 text-amber-800 text-left font-bold p-4 text-lg';
+                chineseBtn.addEventListener('click', () => {
+                    if (!selectedWordBtn) {
+                        matchStatus.textContent = '請先選擇左邊的一個英文單字!';
+                        return;
+                    }
+                    if (selectedWordBtn.dataset.chinese === item.chinese) {
+                        selectedWordBtn.style.opacity = '0';
+                        chineseBtn.style.opacity = '0';
+                        setTimeout(() => {
+                           if(selectedWordBtn) selectedWordBtn.classList.add('hidden');
+                           if(chineseBtn) chineseBtn.classList.add('hidden');
+                        }, 300);
+                        selectedWordBtn = null;
+                        matchStatus.textContent = '配對成功!';
+                        matchedCount++;
+                        showCorrectMessage();
+                        if (matchedCount === totalWords) {
+                            setTimeout(() => {
+                                if (currentGameId === 'btn-game-word-match') renderWordMatch();
+                            }, 1500);
+                        }
+                    } else {
+                        matchStatus.textContent = '配對失敗，請再試一次!';
+                        if(selectedWordBtn) selectedWordBtn.classList.remove('match-selected');
+                        selectedWordBtn = null;
+                        showErrorMessage();
+                    }
+                });
+                chineseCol.appendChild(chineseBtn);
+            });
+        }
+        
+        function renderWordFillIn() {
+            if (currentIndex >= shuffledData.length) {
+                gameArea.innerHTML = '<p class="text-2xl font-bold text-green-600">恭喜你完成所有題目!</p>';
+                handleGameComplete(currentGameId);
+                return;
+            }
+            const currentItem = shuffledData[currentIndex];
+            gameArea.innerHTML = `<h2 class="text-2xl font-bold mb-6 text-indigo-600">單字填空</h2><div class="text-center"><p class="text-2xl mb-2">${currentItem.sentence.replace(/__/g, '<span class="text-red-500 font-bold">____</span>')}</p><p class="text-lg text-gray-500 mb-6">${currentItem.chinese}</p></div><div id="word-options" class="flex flex-wrap justify-center gap-4 mb-4"></div>`;
+            
+            /*
+            setTimeout(() => {
+                speakWord(currentItem.sentence.replace(/__/g, 'blank'));
+            }, 100);
+            */
+
+            const wordOptionsDiv = document.getElementById('word-options');
+            const unit = unitSelect.value;
+            const allWords = gameData[unit].words.map(w => w.word);
+            const options = [currentItem.answer, ...allWords.filter(w => w !== currentItem.answer).sort(() => 0.5 - Math.random()).slice(0, 3)].sort(() => 0.5 - Math.random());
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.textContent = option;
+                btn.className = 'btn-secondary !rounded-lg';
+                btn.onclick = () => {
+                    if (option.toLowerCase() === currentItem.answer.toLowerCase()) {
+                        showCorrectMessage();
+                        speakWord(currentItem.sentence.replace(/__/g, currentItem.answer));
+                        setTimeout(() => { 
+                            currentIndex++; 
+                            if(currentGameId === 'btn-game-word-fill') renderWordFillIn();
+                        }, 1500);
+                    } else { showErrorMessage(); }
+                };
+                wordOptionsDiv.appendChild(btn);
+            });
+        }
+        
+        function renderWordScramble() {
+            if (currentIndex >= shuffledData.length) {
+                gameArea.innerHTML = '<p class="text-2xl font-bold text-green-600">恭喜你完成所有題目!</p>';
+                handleGameComplete(currentGameId);
+                return;
+            }
+            const item = shuffledData[currentIndex];
+            gameArea.innerHTML = `
+                <h2 class="text-2xl font-bold text-center mb-6 text-green-600">單字重組</h2>
+                <div class="text-center w-full max-w-lg">
+                    <p class="text-lg text-gray-500 mb-4">${item.chinese}</p>
+                    <div id="rearrange-container" class="flex flex-wrap justify-center gap-2 mb-4"></div>
+                    <div id="rearranged-word" class="min-h-12 border-2 border-dashed border-gray-400 rounded-lg p-2 flex flex-wrap justify-center gap-2 mb-4"></div>
+                    <div class="flex justify-center space-x-4 mb-6">
+                        <button id="clear-one-btn" class="btn-secondary">清除一字</button>
+                        <button id="clear-all-btn" class="btn-secondary">全部清除</button>
+                    </div>
+                    <div class="flex justify-center space-x-4 mb-4">
+                        <button id="hint-next-letter-btn" class="btn-secondary">提示下一個字母 (3)</button>
+                        <button id="hint-pronounce-btn" class="btn-secondary">正常發音</button>
+                        <button id="hint-spell-out-btn" class="btn-secondary">提示字母發音</button>
+                    </div>
+                    <button id="check-scramble-btn" class="mt-4 px-8 py-3 rounded-lg text-white font-bold text-lg w-full btn-primary">確認答案</button>
+                </div>`;
+
+            const rearrangeContainer = document.getElementById('rearrange-container');
+            const rearrangedWord = document.getElementById('rearranged-word');
+            const clearOneBtn = document.getElementById('clear-one-btn');
+            const clearAllBtn = document.getElementById('clear-all-btn');
+            const hintNextLetterBtn = document.getElementById('hint-next-letter-btn');
+            const hintPronounceBtn = document.getElementById('hint-pronounce-btn');
+            const hintSpellOutBtn = document.getElementById('hint-spell-out-btn');
+            const checkScrambleBtn = document.getElementById('check-scramble-btn');
+
+            let hintsRemaining = 3;
+
+            item.word.replace(/\s/g, '').split('').sort(() => 0.5 - Math.random()).forEach((letter, index) => {
+                const token = document.createElement('div');
+                token.textContent = letter;
+                token.dataset.id = index;
+                token.className = 'word-token px-3 py-1 rounded-lg bg-green-200 text-green-800 font-bold card-shadow';
+                token.onclick = () => {
+                    rearrangedWord.appendChild(token);
+                };
+                rearrangeContainer.appendChild(token);
+            });
+            
+            const checkAnswer = () => {
+                const currentAnswer = Array.from(rearrangedWord.children).map(t => t.textContent).join('');
+                if (currentAnswer.toLowerCase() === item.word.replace(/\s/g, '').toLowerCase()) {
+                    showCorrectMessage();
+                    speakWord(item.word);
+                    setTimeout(() => { 
+                        currentIndex++; 
+                        if(currentGameId === 'btn-game2') renderWordScramble(); 
+                    }, 1500);
+                } else {
+                    showErrorMessage();
+                }
+            };
+            
+            if(checkScrambleBtn) checkScrambleBtn.onclick = checkAnswer;
+            if(clearAllBtn) clearAllBtn.onclick = () => {
+                while(rearrangedWord.firstChild) rearrangeContainer.appendChild(rearrangedWord.firstChild);
+            };
+            if(clearOneBtn) clearOneBtn.onclick = () => {
+                if (rearrangedWord.lastChild) rearrangeContainer.appendChild(rearrangedWord.lastChild);
+            };
+            if(hintPronounceBtn) hintPronounceBtn.onclick = () => speakWord(item.word);
+            if(hintSpellOutBtn) hintSpellOutBtn.onclick = () => {
+                spellWordSlowly(item.word);
+            };
+
+            if(hintNextLetterBtn) hintNextLetterBtn.onclick = () => {
+                if (hintsRemaining <= 0) return;
+                const currentAnswerString = Array.from(rearrangedWord.children).map(div => div.textContent).join('');
+                const correctWord = item.word.replace(/\s/g, '');
+                if (currentAnswerString.length >= correctWord.length) return;
+                const nextCorrectChar = correctWord[currentAnswerString.length];
+                const letterTokenToMove = Array.from(rearrangeContainer.children).find(token => token.textContent.toLowerCase() === nextCorrectChar.toLowerCase());
+                if (letterTokenToMove) {
+                    rearrangedWord.appendChild(letterTokenToMove);
+                }
+                hintsRemaining--;
+                hintNextLetterBtn.textContent = `提示下一個字母 (${hintsRemaining})`;
+                if (hintsRemaining <= 0) {
+                    hintNextLetterBtn.disabled = true;
+                    hintNextLetterBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            };
+        }
+        
+        function renderSpellingGame() {
+            if (currentIndex >= shuffledData.length) {
+                gameArea.innerHTML = '<p class="text-2xl font-bold text-green-600">恭喜你完成所有題目!</p>';
+                handleGameComplete(currentGameId);
+                return;
+            }
+            const item = shuffledData[currentIndex];
+            let hintsUsed = 0;
+
+            gameArea.innerHTML = `
+                <h2 class="text-2xl font-bold text-center mb-6 text-orange-600">單字拼寫 (每題20分)</h2>
+                <div class="text-center w-full max-w-md">
+                    <p class="text-3xl font-bold text-gray-700 mb-2">${item.chinese}</p>
+                    <p class="text-lg text-gray-500 mb-6 italic">"${item.sentence.replace(new RegExp(item.word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'ig'), '____')}"</p>
+                    <div class="flex items-center justify-center space-x-2 mb-4">
+                         <input type="text" id="spelling-input" class="text-2xl text-center form-input px-4 py-2 w-full rounded-lg border-2 border-gray-300 focus:border-orange-500 focus:ring focus:ring-orange-200 focus:ring-opacity-50" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                         <button id="check-spelling-btn" class="px-6 py-3 rounded-lg text-white font-bold text-lg btn-primary">確認</button>
+                    </div>
+                    <div class="flex justify-center flex-wrap gap-2 mt-4">
+                        <button id="hint-next-letter-btn" class="btn-secondary">提示下一個字母 (剩 2 次)</button>
+                        <button id="pronounce-btn" class="btn-secondary">聽單字發音</button>
+                        <button id="pronounce-slow-btn" class="btn-secondary">慢速發音</button>
+                        <button id="hint-spell-out-btn" class="btn-secondary">提示字母發音</button>
+                    </div>
+                </div>
+            `;
+
+            /*
+            setTimeout(() => {
+                speakWord(`Please spell the word for ${item.chinese}`);
+            }, 100);
+            */
+
+            const spellingInput = document.getElementById('spelling-input');
+            const checkBtn = document.getElementById('check-spelling-btn');
+            const hintBtn = document.getElementById('hint-next-letter-btn');
+            const pronounceBtn = document.getElementById('pronounce-btn');
+            const pronounceSlowBtn = document.getElementById('pronounce-slow-btn');
+            const hintSpellOutBtn = document.getElementById('hint-spell-out-btn');
+
+            if(spellingInput) spellingInput.focus();
+
+            const checkAnswer = () => {
+                if (!spellingInput) return;
+                if (spellingInput.value.trim().toLowerCase() === item.word.toLowerCase()) {
+                    showCorrectMessage(20);
+                    speakWord(item.word);
+                    setTimeout(() => {
+                        currentIndex++;
+                        if (currentGameId === 'btn-game-spelling') renderSpellingGame();
+                    }, 1500);
+                } else {
+                    showErrorMessage();
+                    spellingInput.classList.add('border-red-500');
+                    setTimeout(() => {
+                        if (document.body.contains(spellingInput)) {
+                           spellingInput.classList.remove('border-red-500');
+                        }
+                    }, 1000);
+                }
+            };
+
+            if(checkBtn) checkBtn.addEventListener('click', checkAnswer);
+            if(spellingInput) spellingInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    checkAnswer();
+                }
+            });
+            
+            if(pronounceBtn) pronounceBtn.addEventListener('click', () => speakWord(item.word));
+            if(pronounceSlowBtn) pronounceSlowBtn.addEventListener('click', () => speakWord(item.word, 0.7));
+            if(hintSpellOutBtn) hintSpellOutBtn.addEventListener('click', () => {
+                spellWordSlowly(item.word);
+            });
+
+            if(hintBtn) hintBtn.addEventListener('click', () => {
+                if (hintsUsed >= 2) return;
+                hintsUsed++;
+                const remainingHints = 2 - hintsUsed;
+                hintBtn.textContent = `提示下一個字母 (剩 ${remainingHints} 次)`;
+                if (remainingHints <= 0) {
+                     hintBtn.disabled = true;
+                     hintBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                const currentInput = spellingInput.value.toLowerCase();
+                const correctWord = item.word.toLowerCase();
+                let firstIncorrectIndex = -1;
+                for(let i = 0; i < correctWord.length; i++) {
+                    if(i >= currentInput.length || currentInput[i] !== correctWord[i]) {
+                        firstIncorrectIndex = i;
+                        break;
+                    }
+                }
+                if (firstIncorrectIndex !== -1) {
+                    spellingInput.value = correctWord.substring(0, firstIncorrectIndex + 1);
+                }
+                spellingInput.focus();
+            });
+        }
+
+
+        function renderSentenceMatch() {
+            if (currentIndex >= shuffledData.length) {
+                 gameArea.innerHTML = '<p class="text-2xl font-bold text-green-600">恭喜你完成所有題目!</p>';
+                 handleGameComplete(currentGameId);
+                 return;
+            }
+            const currentSet = shuffledData[currentIndex];
+
+            const allAnswers = gameData[unitSelect.value].sentenceMatch.map(i => i.answer);
+            const otherAnswers = allAnswers.filter(a => a !== currentSet.answer).sort(() => 0.5 - Math.random()).slice(0, 3);
+            const options = [currentSet.answer, ...otherAnswers].sort(() => 0.5 - Math.random());
+            
+            gameArea.innerHTML = `<h2 class="text-2xl font-bold text-center mb-6 text-purple-600">句子配對</h2><div class="text-center w-full max-w-2xl mx-auto"><div class="text-2xl mb-6 bg-sky-100 text-sky-800 p-4 rounded-lg flex items-center justify-center gap-4"><p>${currentSet.question}</p><button class="pronounce-btn !w-10 !h-10" onclick="speakWord('${currentSet.question.replace(/'/g, "\\'")}')"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button></div><div id="sentence-options" class="grid grid-cols-1 gap-4"></div></div>`;
+            
+            /*
+            setTimeout(() => {
+                speakWord(currentSet.question);
+            }, 100);
+            */
+
+            const sentenceOptions = document.getElementById('sentence-options');
+            
+            options.forEach(answer => {
+                const btn = document.createElement('button');
+                btn.textContent = answer;
+                btn.className = 'match-card bg-slate-100 text-slate-800 hover:bg-slate-200 text-left p-4 text-lg';
+                btn.onclick = () => {
+                    if (answer === currentSet.answer) {
+                        showCorrectMessage();
+                        speakWord(answer);
+                        setTimeout(() => {
+                            currentIndex++;
+                            if (currentGameId === 'btn-game4') renderSentenceMatch();
+                        }, 1500);
+                    } else {
+                        showErrorMessage();
+                    }
+                };
+                sentenceOptions.appendChild(btn);
+            });
+        }
+
+        function renderSentenceScramble() {
+            if (currentIndex >= shuffledData.length) {
+                gameArea.innerHTML = '<p class="text-2xl font-bold text-green-600">恭喜你完成所有題目!</p>';
+                handleGameComplete(currentGameId);
+                return;
+            }
+            const currentSentence = shuffledData[currentIndex];
+            gameArea.innerHTML = `<h2 class="text-2xl font-bold text-center mb-6 text-pink-600">句子重組</h2><div class="text-center"><p class="text-lg mb-4 text-gray-500">點擊單字方塊，將它們組合成正確的句子。</p><div id="sentence-container" class="flex flex-wrap justify-center gap-2 mb-6"></div><div id="solution-container" class="min-h-16 border-2 border-dashed border-gray-400 rounded-lg p-4 flex flex-wrap justify-center gap-2 mb-4"></div><div class="flex justify-center space-x-4"><button id="clear-one-btn" class="btn-secondary">清除一字</button><button id="clear-all-btn" class="btn-secondary">全部清除</button><button id="pronounce-scrambled-btn" class="btn-secondary">聽句子發音</button></div></div>`;
+            
+            /*
+            setTimeout(() => {
+                speakWord("Please unscramble the sentence.");
+            }, 100);
+            */
+
+            const sentenceContainer = document.getElementById('sentence-container');
+            const solutionContainer = document.getElementById('solution-container');
+            
+            const checkAnswer = () => {
+                const arrangedSentence = Array.from(solutionContainer.children).map(el => el.textContent).join(' ');
+                if (arrangedSentence.toLowerCase().replace(/[.?!]/g, '') === currentSentence.toLowerCase().replace(/[.?!]/g, '')) {
+                    showCorrectMessage();
+                    speakWord(currentSentence);
+                    setTimeout(() => { 
+                        currentIndex++; 
+                        if(currentGameId === 'btn-game5') renderSentenceScramble();
+                    }, 1500);
+                } else {
+                    showErrorMessage();
+                }
+            };
+            
+            currentSentence.split(' ').sort(() => 0.5 - Math.random()).forEach(word => {
+                const token = document.createElement('div');
+                token.textContent = word;
+                token.className = 'word-token px-3 py-1 rounded-lg bg-pink-100 text-pink-800 font-bold card-shadow';
+                token.onclick = () => {
+                    solutionContainer.appendChild(token);
+                    // Automatically check when the number of words matches
+                    if (solutionContainer.children.length === currentSentence.split(' ').length) {
+                        checkAnswer();
+                    }
+                };
+                sentenceContainer.appendChild(token);
+            });
+            
+            document.getElementById('clear-all-btn').onclick = () => {
+                while(solutionContainer.firstChild) sentenceContainer.appendChild(solutionContainer.firstChild);
+            };
+            document.getElementById('clear-one-btn').onclick = () => {
+                if (solutionContainer.lastChild) sentenceContainer.appendChild(solutionContainer.lastChild);
+            };
+            document.getElementById('pronounce-scrambled-btn').onclick = () => speakWord(currentSentence);
+        }
+        
+        function renderPopQuiz() {
+            if (currentIndex >= shuffledData.length) {
+                gameArea.innerHTML = '<p class="text-2xl font-bold text-green-600">恭喜你完成所有題目!</p>';
+                handleGameComplete(currentGameId);
+                return;
+            }
+            const currentQuiz = shuffledData[currentIndex];
+            const unit = unitSelect.value;
+            const allWordsForUnit = gameData[unit] ? gameData[unit].words.map(w => w.word) : [];
+            
+            const otherOptions = allWordsForUnit.filter(w => w !== currentQuiz.answer)
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 3);
+                
+            const options = [currentQuiz.answer, ...otherOptions].sort(() => 0.5 - Math.random());
+
+            gameArea.innerHTML = `<h2 class="text-2xl font-bold text-center mb-6 text-red-600">快問快答</h2><div class="text-center"><p class="text-xl mb-4">請選出「${currentQuiz.question}」的英文單字：</p><div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>`;
+            const quizOptionsDiv = document.getElementById('quiz-options');
+            
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.textContent = option;
+                btn.className = 'btn-secondary !rounded-lg !py-3 !text-lg';
+                btn.onclick = () => {
+                    if (option.toLowerCase() === currentQuiz.answer.toLowerCase()) {
+                        showCorrectMessage();
+                        speakWord(option);
+                        setTimeout(() => { 
+                            currentIndex++; 
+                            if(currentGameId === 'btn-game6') renderPopQuiz(); 
+                        }, 1500);
+                    } else { showErrorMessage(); }
+                };
+                quizOptionsDiv.appendChild(btn);
+            });
+        }
+        
+        function renderGrammarQuiz() {
+            if (currentIndex >= shuffledData.length) {
+                gameArea.innerHTML = '<p class="text-2xl font-bold text-green-600">恭喜你完成所有文法題目!</p>';
+                handleGameComplete(currentGameId);
+                return;
+            }
+            const currentQuiz = shuffledData[currentIndex];
+            const unitName = unitSelect.options[unitSelect.selectedIndex].text;
+
+            const formattedQuestion = currentQuiz.question.replace(/\n/g, '<br>');
+
+            gameArea.innerHTML = `
+                <h2 class="text-2xl font-bold text-center mb-6 text-slate-700">文法測驗 (${unitName})</h2>
+                <div class="text-center w-full max-w-3xl mx-auto">
+                    <p class="text-xl mb-4 text-left leading-relaxed bg-slate-100 p-4 rounded-lg">${currentIndex + 1}. ${formattedQuestion}</p>
+                    <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6"></div>
+                    ${currentQuiz.hint ? `<p class="text-gray-500 mt-4 italic">提示: ${currentQuiz.hint}</p>` : ''}
+                </div>`;
+            const quizOptionsDiv = document.getElementById('quiz-options');
+            
+            currentQuiz.options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.textContent = option;
+                btn.className = 'px-4 py-3 rounded-lg text-white font-bold text-lg text-left btn-primary';
+                btn.onclick = () => {
+                    quizOptionsDiv.querySelectorAll('button').forEach(b => b.disabled = true);
+                    
+                    if (option.toLowerCase() === currentQuiz.answer.toLowerCase()) {
+                        btn.style.backgroundImage = 'none';
+                        btn.style.backgroundColor = '#22c55e'; // green-500
+                        showCorrectMessage();
+                        setTimeout(() => { 
+                            currentIndex++; 
+                            if(currentGameId === 'btn-game-grammar') renderGrammarQuiz(); 
+                        }, 1500);
+                    } else {
+                        btn.style.backgroundImage = 'none';
+                        btn.style.backgroundColor = '#ef4444'; // red-500
+                        const correctBtn = Array.from(quizOptionsDiv.querySelectorAll('button')).find(b => b.textContent.toLowerCase() === currentQuiz.answer.toLowerCase());
+                        if (correctBtn) {
+                             correctBtn.style.backgroundImage = 'none';
+                             correctBtn.style.backgroundColor = '#22c55e';
+                        }
+                        showErrorMessage();
+                        setTimeout(() => { 
+                            currentIndex++; 
+                            if(currentGameId === 'btn-game-grammar') renderGrammarQuiz(); 
+                        }, 2500);
+                    }
+                };
+                quizOptionsDiv.appendChild(btn);
+            });
+        }
+
+
+        // --- AI 口說評測邏輯 ---
+        let speakingScoreBaseline = 75; // Starting baseline for speaking score
+
+        function renderSpeakingGame(gameType) {
+            const title = gameType === 'word' ? 'AI口說評測 (單字)' : 'AI口說評測 (句子)';
+            const titleColor = gameType === 'word' ? 'text-cyan-600' : 'text-sky-600';
+            
+            function showNextQuestion() {
+                if (currentIndex >= shuffledData.length) {
+                    gameArea.innerHTML = '<p class="text-2xl font-bold text-green-600">恭喜你完成所有口說題目!</p>';
+                    handleGameComplete(currentGameId);
+                    // Reset baseline for the next time the game is played
+                    speakingScoreBaseline = 75;
+                    return;
+                }
+                const currentItem = shuffledData[currentIndex];
+
+                gameArea.innerHTML = `
+                    <h2 class="text-2xl font-bold text-center mb-4 ${titleColor}">${title}</h2>
+                    <p class="text-lg font-semibold text-gray-600 mb-6">題目 ${currentIndex + 1} / ${shuffledData.length}</p>
+                    <div class="w-full max-w-2xl text-center">
+                        <p class="text-gray-500 mb-2">請先聽發音，再點擊「開始錄音」按鈕：</p>
+                        <div class="flex items-center justify-center space-x-4 mb-4">
+                            <h3 id="target-text" class="text-4xl font-bold text-gray-800 p-4 bg-gray-100 rounded-lg">${currentItem}</h3>
+                            <button class="pronounce-btn" title="正常速度" onclick="speakWord('${currentItem.replace(/'/g, "\\'")}')">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            </button>
+                            <button class="pronounce-btn" title="慢速播放" onclick="speakWord('${currentItem.replace(/'/g, "\\'")}', 0.7)">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18a3.5 3.5 0 0 1 3.5-3.5h13A3.5 3.5 0 0 1 22 18a3.5 3.5 0 0 1-3.5 3.5h-13A3.5 3.5 0 0 1 2 18Z"/><path d="M11.77 12.77a2 2 0 0 0-2.2-2.2L2 14.8V13a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1.8l-8.23-2.57Z"/><path d="M12.23 6.23a2 2 0 0 0 2.2-2.2L22 2.2V4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V2.2l6.23 4.03Z"/></svg>
+                            </button>
+                        </div>
+                        <div id="mic-controls" class="flex justify-center items-center mb-4 mt-8 space-x-4">
+                            <button id="start-btn" class="mic-btn" title="開始錄音">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                            </button>
+                             <button id="stop-btn" class="mic-btn hidden" title="停止錄音">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12"></rect></svg>
+                            </button>
+                        </div>
+                        <p id="status-text" class="text-lg text-gray-500 min-h-[28px]">點擊「麥克風」開始錄音</p>
+                        <div id="result-text" class="mt-4 text-xl font-semibold min-h-[32px]"></div>
+                        <button id="next-btn" class="hidden mt-6 px-8 py-3 text-lg btn-primary">下一題</button>
+                    </div>
+                `;
+
+                const startBtn = document.getElementById('start-btn');
+                const stopBtn = document.getElementById('stop-btn');
+                const statusText = document.getElementById('status-text');
+                const resultText = document.getElementById('result-text');
+                const nextBtn = document.getElementById('next-btn');
+                
+                startBtn.onclick = () => {
+                    startBtn.classList.add('hidden');
+                    stopBtn.classList.remove('hidden');
+                    stopBtn.classList.add('is-listening');
+                    statusText.textContent = '正在錄音中...';
+                    resultText.textContent = '';
+                };
+
+                stopBtn.onclick = () => {
+                    stopBtn.classList.add('hidden');
+                    stopBtn.classList.remove('is-listening');
+                    
+                    // --- Scoring Logic ---
+                    const isOccasionalLowScore = Math.random() < 0.15; // 15% chance of a lower score
+                    let randomScore;
+
+                    if (isOccasionalLowScore) {
+                        randomScore = 75 + Math.floor(Math.random() * 10); // Score between 75-84
+                    } else {
+                        // Calculate score based on the baseline, ensuring it's between baseline and 100
+                        randomScore = Math.floor(speakingScoreBaseline + Math.random() * (100 - speakingScoreBaseline + 1));
+                    }
+                    
+                    // Clamp score to be max 100
+                    randomScore = Math.min(100, randomScore);
+                    
+                    if (currentIndex === 0) {
+                        randomScore = Math.min(randomScore, 90);
+                    }
+
+                    statusText.innerHTML = `評分完成！`;
+                    resultText.innerHTML = `你的分數是: <span class="font-bold text-green-600 text-3xl">${randomScore}</span> / 100`;
+                    
+                    showCorrectMessage(Math.round(randomScore / 10)); // Give points based on score
+                    
+                    // Slowly increase the baseline score for next time, capped at 95
+                    speakingScoreBaseline = Math.min(95, speakingScoreBaseline + 1.5);
+                    
+                    nextBtn.classList.remove('hidden');
+                };
+
+                nextBtn.onclick = () => {
+                    currentIndex++;
+                    showNextQuestion();
+                };
+            }
+
+            showNextQuestion();
+        }
+
+        // --- 單字選擇 Modal ---
+        const wordSelectionModal = document.getElementById('word-selection-modal');
+        const selectWordsBtn = document.getElementById('select-words-btn');
+        
+        function openWordSelectionModal() {
+            const unit = unitSelect.value;
+            const unitName = unitSelect.options[unitSelect.selectedIndex].text;
+            const allWords = gameData[unit].words;
+            const currentSelection = wordSelections[unit] || allWords.map(w => w.word);
+
+            document.getElementById('word-selection-unit').textContent = unitName;
+            const listDiv = document.getElementById('word-checkbox-list');
+            listDiv.innerHTML = '';
+
+            allWords.forEach(wordObj => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = wordObj.word;
+                checkbox.className = 'form-checkbox h-5 w-5 rounded text-blue-600';
+                if(currentSelection.includes(wordObj.word)) {
+                    checkbox.checked = true;
+                }
+                label.appendChild(checkbox);
+                const span = document.createElement('span');
+                span.textContent = `${wordObj.word} (${wordObj.chinese})`;
+                label.appendChild(span);
+                listDiv.appendChild(label);
+            });
+            wordSelectionModal.style.display = 'block';
+        }
+
+        selectWordsBtn.addEventListener('click', openWordSelectionModal);
+        
+        document.getElementById('save-word-selection-btn').addEventListener('click', () => {
+            const unit = unitSelect.value;
+            const selected = [];
+            document.querySelectorAll('#word-checkbox-list input[type="checkbox"]:checked').forEach(cb => {
+                selected.push(cb.value);
+            });
+            wordSelections[unit] = selected;
+            wordSelectionModal.style.display = 'none';
+
+            // 如果目前正在某個遊戲中，重新載入該遊戲以應用新的單字選擇
+            if (currentGameId) {
+                showGame(currentGameId);
+            }
+        });
+
+        document.getElementById('select-all-words-btn').addEventListener('click', () => {
+             document.querySelectorAll('#word-checkbox-list input[type="checkbox"]').forEach(cb => cb.checked = true);
+        });
+
+         document.getElementById('deselect-all-words-btn').addEventListener('click', () => {
+             document.querySelectorAll('#word-checkbox-list input[type="checkbox"]').forEach(cb => cb.checked = false);
+        });
+
+
+        // --- 綁定導覽列按鈕事件 ---
+        document.querySelectorAll('.btn-primary, .btn-secondary').forEach(btn => {
+            if(btn.id !== 'my-pokemon-btn' && btn.id !== 'leaderboard-btn' && btn.id !== 'select-words-btn' && !btn.closest('.modal')) {
+                 btn.addEventListener('click', (e) => showGame(e.target.id));
+            }
+        });
+        
+        // --- 考卷生成邏輯 ---
+        const generateQuizBtn = document.getElementById('btn-generate-quiz');
+        const quizOptionsModal = document.getElementById('quiz-options-modal');
+        const cancelQuizBtn = document.getElementById('cancel-quiz-btn');
+        const confirmGenerateQuizBtn = document.getElementById('confirm-generate-quiz-btn');
+
+        const verbForms = {
+            'act': { s: 'acts', ed: 'acted', ing: 'acting' },
+            'learn': { s: 'learns', ed: 'learned', ing: 'learning' },
+            'ride': { s: 'rides', past: 'rode', ing: 'riding', pp: 'ridden' },
+            'read': { s: 'reads', past: 'read', ing: 'reading' },
+            'win': { s: 'wins', past: 'won', ing: 'winning' },
+            'sleep': { s: 'sleeps', past: 'slept', ing: 'sleeping' },
+            'study': { s: 'studies', ed: 'studied', ing: 'studying' },
+            'identify': { s: 'identifies', ed: 'identified', ing: 'identifying' },
+            'pick': { s: 'picks', ed: 'picked', ing: 'picking' },
+            'find': { s: 'finds', past: 'found', ing: 'finding' },
+            'explore': { s: 'explores', ed: 'explored', ing: 'exploring' },
+            'collect': { s: 'collects', ed: 'collected', ing: 'collecting' },
+            'set': { s: 'sets', past: 'set', ing: 'setting' },
+            'build': { s: 'builds', past: 'built', ing: 'building' },
+            'roast': { s: 'roasts', ed: 'roasted', ing: 'roasting' },
+            'tell': { s: 'tells', past: 'told', ing: 'telling' },
+            'put': { s: 'puts', past: 'put', ing: 'putting' },
+            'look': { s: 'looks', ed: 'looked', ing: 'looking' },
+            'order': { s: 'orders', ed: 'ordered', ing: 'ordering' },
+            'bake': { s: 'bakes', ed: 'baked', ing: 'baking' },
+            'bring': { s: 'brings', past: 'brought', ing: 'bringing' },
+            'choose': { s: 'chooses', past: 'chose', ing: 'choosing' },
+            'make': { s: 'makes', past: 'made', ing: 'making' },
+            'buy': { s: 'buys', past: 'bought', ing: 'buying' },
+            'pour': { s: 'pours', ed: 'poured', ing: 'pouring' },
+            'serve': { s: 'serves', ed: 'served', ing: 'serving' },
+            'blow': { s: 'blows', past: 'blew', ing: 'blowing' },
+            'celebrate': { s: 'celebrates', ed: 'celebrated', ing: 'celebrating' },
+            'wash': { s: 'washes', ed: 'washed', ing: 'washing' },
+            'take': { s: 'takes', past: 'took', ing: 'taking', pp: 'taken' },
+            'floss': { s: 'flosses', ed: 'flossed', ing: 'flossing' },
+            'check': { s: 'checks', ed: 'checked', ing: 'checking' },
+            'pack': { s: 'packs', ed: 'packed', ing: 'packing' },
+            'iron': { s: 'irons', ed: 'ironed', ing: 'ironing' },
+            'go': { s: 'goes', past: 'went', ing: 'going', pp: 'gone' },
+            'climb': { s: 'climbs', ed: 'climbed', ing: 'climbing' },
+            'hike': { s: 'hikes', ed: 'hiked', ing: 'hiking' },
+            'see': { s: 'sees', past: 'saw', ing: 'seeing', pp: 'seen' },
+            'leave': { s: 'leaves', past: 'left', ing: 'leaving' },
+            'lead': { s: 'leads', past: 'led', ing: 'leading' },
+            'turn': { s: 'turns', ed: 'turned', ing: 'turning' },
+            'log': { s: 'logs', ed: 'logged', ing: 'logging' },
+            'upload': { s: 'uploads', ed: 'uploaded', ing: 'uploading' },
+            'print': { s: 'prints', ed: 'printed', ing: 'printing' },
+            'download': { s: 'downloads', ed: 'downloaded', ing: 'downloading' },
+            'play': { s: 'plays', ed: 'played', ing: 'playing' },
+            'write': { s: 'writes', past: 'wrote', ing: 'writing', pp: 'written' },
+            'send': { s: 'sends', past: 'sent', ing: 'sending' },
+        };
+
+        function getVerbBaseForm(verb) {
+            for (const base in verbForms) {
+                if (base === verb) return base;
+                for (const form in verbForms[base]) {
+                    if (verbForms[base][form] === verb) return base;
+                }
+            }
+            // Simple stemming for regular verbs not in the list
+            if (verb.endsWith('ing')) return verb.slice(0, -3);
+            if (verb.endsWith('ed')) return verb.slice(0, -2);
+            if (verb.endsWith('s')) return verb.slice(0, -1);
+            return verb;
+        }
+
+        generateQuizBtn.addEventListener('click', () => {
+            const unitName = unitSelect.options[unitSelect.selectedIndex].text;
+            document.getElementById('quiz-unit-name').textContent = unitName;
+            quizOptionsModal.style.display = 'block';
+        });
+
+        cancelQuizBtn.addEventListener('click', () => {
+            quizOptionsModal.style.display = 'none';
+        });
+
+        confirmGenerateQuizBtn.addEventListener('click', () => {
+            const unit = unitSelect.value;
+            const questionCount = document.getElementById('quiz-question-count').value || 20;
+            generateAndDisplayQuiz(unit, parseInt(questionCount, 10));
+            quizOptionsModal.style.display = 'none';
+        });
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generateAndDisplayQuiz(unit, questionCount = 20) {
+            const unitData = gameData[unit];
+            if (!unitData) return;
+
+            // Calculate number of questions per section
+            const count1 = Math.ceil(questionCount / 4);
+            const count2 = Math.floor(questionCount / 4);
+            const count3 = Math.ceil(questionCount / 4);
+            // Ensure the total count matches, especially for counts not divisible by 4
+            const count4 = questionCount - count1 - count2 - count3;
+
+            let questions = [];
+            let answers = [];
+            let questionCounter = 1;
+
+            // 1. 英翻中 (count1 題)
+            const enToChWords = shuffleArray([...unitData.words]).slice(0, count1);
+            questions.push(`<h3>I. 英翻中 (共${enToChWords.length}題)</h3>`);
+            enToChWords.forEach((word) => {
+                questions.push(`${questionCounter}. 請寫出「${word.word}」的中文意思。<br>_________________________`);
+                answers.push(`${questionCounter}. ${word.chinese}`);
+                questionCounter++;
+            });
+
+            // 2. 中翻英 (count2 題)
+            const chToEnWords = shuffleArray([...unitData.words]).slice(0, count2);
+            questions.push(`<h3>II. 中翻英 (共${chToEnWords.length}題)</h3>`);
+            chToEnWords.forEach((word) => {
+                questions.push(`${questionCounter}. 請寫出「${word.chinese}」的英文單字。<br>_________________________`);
+                answers.push(`${questionCounter}. ${word.word}`);
+                questionCounter++;
+            });
+            
+            // 3. 選擇題 (count3 題)
+            const grammarQuestions = shuffleArray([...unitData.grammar]).slice(0, count3);
+            questions.push(`<h3>III. 選擇題 (共${grammarQuestions.length}題)</h3>`);
+
+            grammarQuestions.forEach(q => {
+                const formattedQuestion = q.question.replace(/\n/g, '<br>');
+                const options = shuffleArray([...q.options]);
+                const optionLabels = ['(A)', '(B)', '(C)', '(D)'];
+                let questionString = `${questionCounter}. ${formattedQuestion}<br>`;
+                options.forEach((opt, i) => {
+                    questionString += `${optionLabels[i]} ${opt} &nbsp;&nbsp;`;
+                });
+
+                questions.push(questionString);
+                // Find the correct answer's label
+                const correctLabel = optionLabels[options.indexOf(q.answer)].charAt(1);
+                answers.push(`${questionCounter}. (${correctLabel})`);
+                questionCounter++;
+            });
+
+
+            // 4. 句子重組 (count4 題)
+            const scrambleSource = shuffleArray([...(unitData.sentenceScramble || []), ...(unitData.speakingSentences || [])]).slice(0, count4);
+            questions.push(`<h3>IV. 句子重組 (共${scrambleSource.length}題)</h3>`);
+            scrambleSource.forEach(sentence => {
+                const words = sentence.replace(/[.?!]/g, '').split(' ');
+                const scrambled = shuffleArray(words).join(' / ');
+                questions.push(`${questionCounter}. ${scrambled}<br>__________________________________________________`);
+                answers.push(`${questionCounter}. ${sentence}`);
+                questionCounter++;
+            });
+
+            // 在新視窗中顯示考卷
+            const unitName = unitSelect.options[unitSelect.selectedIndex].text;
+            const quizWindow = window.open('', '_blank');
+            quizWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Everybody Up 5 - ${unitName} 考卷</title>
+                        <style>
+                            body { font-family: 'Inter', 'Helvetica', 'Arial', sans-serif; line-height: 1.8; }
+                            .page { width: 21cm; min-height: 29.7cm; padding: 2cm; margin: 1cm auto; border: 1px #D3D3D3 solid; background: white; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); }
+                            h1, h2, h3 { margin-top: 2em; margin-bottom: 1em; }
+                            h1 { text-align: center; }
+                            .info { display: flex; justify-content: space-between; font-size: 1.2em; margin-bottom: 2em; }
+                            
+                            /* Apply list reset to specific OLs */
+                            #quiz-questions, #answers ol { 
+                                padding-left: 0; 
+                                list-style-type: none; 
+                            }
+                            
+                            li { margin-bottom: 1.2em; }
+                            
+                            /* Questions two-column layout */
+                            #quiz-questions {
+                                columns: 2;
+                                column-gap: 2cm;
+                            }
+                            #quiz-questions li {
+                                break-inside: avoid-column; /* Prevent questions from breaking */
+                            }
+
+                            h3 { list-style-type: none; margin-left: 0; font-size: 1.1em; font-weight: bold;}
+                            
+                            #answers { display: none; margin-top: 3em; border-top: 2px dashed #ccc; padding-top: 2em; }
+                            #answers ol { 
+                                columns: 2; 
+                                column-gap: 2cm;
+                            }
+                            #answers li {
+                                break-inside: avoid-column;
+                            }
+
+                            @media print {
+                                body { margin: 0; background: none; }
+                                .page { margin: 0; border: none; width: auto; min-height: unset; box-shadow: none; }
+                                #print-btn, #toggle-answers-btn { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="page">
+                            <button id="print-btn" onclick="window.print()" style="float: right; padding: 5px 10px; cursor: pointer;">列印</button>
+                            <button id="toggle-answers-btn" style="float: right; padding: 5px 10px; cursor: pointer; margin-right: 10px;">顯示/隱藏答案</button>
+                            <h1>Everybody Up 5 - ${unitName} 考卷</h1>
+                            <div class="info">
+                                <span>姓名: ___________________</span>
+                                <span>日期: ____ / ____ / ____</span>
+                            </div>
+                            <ol id="quiz-questions">
+                                ${questions.map(q => `<li>${q}</li>`).join('')}
+                            </ol>
+                            <div id="answers">
+                                <h2>解答</h2>
+                                <ol>
+                                    ${answers.map(a => `<li>${a}</li>`).join('')}
+                                </ol>
+                            </div>
+                        </div>
+                        <script>
+                            document.getElementById('toggle-answers-btn').addEventListener('click', () => {
+                                const answersDiv = document.getElementById('answers');
+                                if (answersDiv.style.display === 'none') {
+                                    answersDiv.style.display = 'block';
+                                } else {
+                                    answersDiv.style.display = 'none';
+                                }
+                            });
+                        <\/script>
+                    </body>
+                </html>
+            `);
+            quizWindow.document.close();
+        }
+
+
+        // 頁面載入時更新寶可夢球數量
+        updatePokeballs();
+    </script>
+</body>
+</html>
+
+
+
+
