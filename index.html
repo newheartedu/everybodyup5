@@ -175,6 +175,7 @@
                 </div>
                 
                 <div class="flex items-center space-x-3 flex-wrap justify-center gap-y-2">
+                    <button id="toggle-sound-btn" class="w-10 h-10 flex items-center justify-center rounded-full bg-white text-gray-700 shadow-md hover:bg-gray-100 transition-colors text-xl" title="切換語音朗讀">🔊</button>
                     <div class="text-lg font-bold bg-white px-4 py-2 rounded-lg shadow text-rose-700">
                         ⛽ 油量: <span class="fuel-display text-red-500">15</span> 秒
                     </div>
@@ -275,29 +276,87 @@
 
     <!-- 產生考卷 Modal -->
     <div id="exam-modal" class="modal">
-        <div class="modal-content border-4 border-indigo-300 relative">
-            <h2 class="text-3xl font-extrabold mb-6 text-indigo-700">📝 動態生成 A4 考卷</h2>
-            <div class="text-left mb-6 space-y-5">
+        <div class="modal-content border-4 border-indigo-300 relative max-w-2xl w-11/12">
+            <h2 class="text-3xl font-extrabold mb-6 text-indigo-700">📝 客製化 A4 考卷</h2>
+            
+            <div class="text-left mb-6 space-y-4">
+                <!-- 單元選擇區 -->
                 <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                    <label class="block text-indigo-900 font-bold mb-2 text-lg">設定測驗範圍：</label>
-                    <select id="exam-scope" class="w-full p-3 border-2 border-indigo-200 rounded-lg bg-white text-indigo-900 font-medium focus:outline-none focus:border-indigo-500 shadow-sm cursor-pointer">
-                        <option value="current">目前選擇單元</option>
-                        <option value="all">全部單元 (Unit 1 - Unit 8 總複習)</option>
-                    </select>
+                    <div class="flex justify-between items-center mb-3 border-b border-indigo-200 pb-2">
+                        <label class="font-bold text-indigo-900 text-lg">一、勾選測驗單元：</label>
+                        <div class="space-x-2 text-sm">
+                            <button id="exam-sel-all-units" class="text-indigo-600 hover:text-indigo-800 font-bold underline px-2 py-1 rounded hover:bg-indigo-100 transition-colors">全選</button>
+                            <button id="exam-sel-no-units" class="text-gray-500 hover:text-gray-700 font-bold underline px-2 py-1 rounded hover:bg-gray-200 transition-colors">全不選</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2" id="exam-unit-checkboxes">
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white p-2 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-100 transition-colors"><input type="checkbox" value="u1" checked class="exam-unit-cb w-4 h-4 text-indigo-600 rounded"> <span class="font-bold text-gray-700">Unit 1</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white p-2 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-100 transition-colors"><input type="checkbox" value="u2" class="exam-unit-cb w-4 h-4 text-indigo-600 rounded"> <span class="font-bold text-gray-700">Unit 2</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white p-2 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-100 transition-colors"><input type="checkbox" value="u3" class="exam-unit-cb w-4 h-4 text-indigo-600 rounded"> <span class="font-bold text-gray-700">Unit 3</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white p-2 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-100 transition-colors"><input type="checkbox" value="u4" class="exam-unit-cb w-4 h-4 text-indigo-600 rounded"> <span class="font-bold text-gray-700">Unit 4</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white p-2 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-100 transition-colors"><input type="checkbox" value="u5" class="exam-unit-cb w-4 h-4 text-indigo-600 rounded"> <span class="font-bold text-gray-700">Unit 5</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white p-2 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-100 transition-colors"><input type="checkbox" value="u6" class="exam-unit-cb w-4 h-4 text-indigo-600 rounded"> <span class="font-bold text-gray-700">Unit 6</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white p-2 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-100 transition-colors"><input type="checkbox" value="u7" class="exam-unit-cb w-4 h-4 text-indigo-600 rounded"> <span class="font-bold text-gray-700">Unit 7</span></label>
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white p-2 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-100 transition-colors"><input type="checkbox" value="u8" class="exam-unit-cb w-4 h-4 text-indigo-600 rounded"> <span class="font-bold text-gray-700">Unit 8</span></label>
+                    </div>
                 </div>
+
+                <!-- 題型與題數設定區 -->
                 <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                    <label class="block text-indigo-900 font-bold mb-2 text-lg">設定總題數：</label>
-                    <select id="exam-count" class="w-full p-3 border-2 border-indigo-200 rounded-lg bg-white text-indigo-900 font-medium focus:outline-none focus:border-indigo-500 shadow-sm cursor-pointer">
-                        <option value="20">20 題 (各區分配約 5 題)</option>
-                        <option value="30">30 題 (各區分配約 7-8 題)</option>
-                        <option value="40" selected>40 題 (各區分配約 10 題)</option>
-                    </select>
-                    <p class="text-sm text-indigo-600 mt-2 font-medium">系統會自動將題數均分至「英翻中、中翻英、選擇題、句子重組」四大題。</p>
+                    <label class="block font-bold text-indigo-900 text-lg mb-3 border-b border-indigo-200 pb-2">二、設定題型與題數：</label>
+                    <div class="space-y-3 px-2">
+                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input type="checkbox" id="exam-type-e2c" checked class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+                                <span class="font-bold text-gray-800 text-lg">英翻中</span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="exam-count-e2c" value="10" min="1" max="50" class="w-16 p-1.5 border-2 border-indigo-200 rounded-lg text-center font-bold text-indigo-900 focus:border-indigo-500 outline-none">
+                                <span class="font-medium text-gray-600">題</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input type="checkbox" id="exam-type-c2e" checked class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+                                <span class="font-bold text-gray-800 text-lg">中翻英</span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="exam-count-c2e" value="10" min="1" max="50" class="w-16 p-1.5 border-2 border-indigo-200 rounded-lg text-center font-bold text-indigo-900 focus:border-indigo-500 outline-none">
+                                <span class="font-medium text-gray-600">題</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input type="checkbox" id="exam-type-mcq" checked class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+                                <span class="font-bold text-gray-800 text-lg">選擇題 <span class="text-sm font-medium text-gray-500">(詞彙)</span></span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="exam-count-mcq" value="10" min="1" max="50" class="w-16 p-1.5 border-2 border-indigo-200 rounded-lg text-center font-bold text-indigo-900 focus:border-indigo-500 outline-none">
+                                <span class="font-medium text-gray-600">題</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input type="checkbox" id="exam-type-scramble" checked class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+                                <span class="font-bold text-gray-800 text-lg">句子重組</span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="exam-count-scramble" value="5" min="1" max="20" class="w-16 p-1.5 border-2 border-indigo-200 rounded-lg text-center font-bold text-indigo-900 focus:border-indigo-500 outline-none">
+                                <span class="font-medium text-gray-600">題</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+            
             <div class="flex justify-center gap-4 mt-8">
                 <button id="close-exam-btn" class="px-6 py-3 rounded-full bg-gray-400 text-white font-bold text-lg hover:bg-gray-500 shadow-md transition-colors w-1/3">取消</button>
-                <button id="confirm-generate-exam" class="px-6 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-700 text-white font-bold text-lg hover:shadow-lg hover:scale-105 transition-all w-2/3 shadow-md">確認生成考卷</button>
+                <button id="confirm-generate-exam" class="px-6 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-700 text-white font-bold text-lg hover:shadow-lg hover:scale-105 transition-all w-2/3 shadow-md flex justify-center items-center">
+                    <span class="mr-2">📄</span> 立即生成考卷
+                </button>
             </div>
         </div>
     </div>
@@ -565,7 +624,21 @@
         }
         setVoice(); 
         
+        let isSoundMuted = false;
+        
+        const toggleSoundBtn = document.getElementById('toggle-sound-btn');
+        if (toggleSoundBtn) {
+            toggleSoundBtn.addEventListener('click', () => {
+                isSoundMuted = !isSoundMuted;
+                toggleSoundBtn.textContent = isSoundMuted ? '🔇' : '🔊';
+                if (isSoundMuted && speechSynthesizer.speaking) {
+                    speechSynthesizer.cancel();
+                }
+            });
+        }
+        
         const speakWord = (text, rate = 0.95) => {
+            if (isSoundMuted) return;
             if (speechSynthesizer.speaking) speechSynthesizer.cancel(); 
             
             if (voices.length === 0) {
@@ -3132,9 +3205,23 @@
         const examModal = document.getElementById('exam-modal');
         const closeExamBtn = document.getElementById('close-exam-btn');
         const confirmGenerateExam = document.getElementById('confirm-generate-exam');
+        
+        // 全選 / 全不選 單元
+        document.getElementById('exam-sel-all-units').addEventListener('click', () => {
+            document.querySelectorAll('.exam-unit-cb').forEach(cb => cb.checked = true);
+        });
+        document.getElementById('exam-sel-no-units').addEventListener('click', () => {
+            document.querySelectorAll('.exam-unit-cb').forEach(cb => cb.checked = false);
+        });
 
         btnGenerateExam.addEventListener('click', () => {
             examModal.style.display = 'block';
+            
+            // 自動預選目前的單元
+            const currentUnitVal = unitSelect.value;
+            document.querySelectorAll('.exam-unit-cb').forEach(cb => {
+                cb.checked = (cb.value === currentUnitVal);
+            });
         });
 
         closeExamBtn.addEventListener('click', () => {
@@ -3142,32 +3229,45 @@
         });
 
         confirmGenerateExam.addEventListener('click', () => {
-            examModal.style.display = 'none';
             generateExamPaper();
         });
 
         function generateExamPaper() {
-            const scope = document.getElementById('exam-scope').value;
-            const total = parseInt(document.getElementById('exam-count').value, 10);
-            const selectedUnit = unitSelect.value;
-            const unitName = unitSelect.options[unitSelect.selectedIndex].text;
+            // 1. 取得選擇的單元
+            const selectedUnits = Array.from(document.querySelectorAll('.exam-unit-cb:checked')).map(cb => cb.value);
+            if (selectedUnits.length === 0) {
+                alert('請至少勾選一個測驗單元！');
+                return;
+            }
 
+            // 2. 取得題型與題數設定
+            const useE2C = document.getElementById('exam-type-e2c').checked;
+            const countE2C = parseInt(document.getElementById('exam-count-e2c').value, 10) || 0;
+            
+            const useC2E = document.getElementById('exam-type-c2e').checked;
+            const countC2E = parseInt(document.getElementById('exam-count-c2e').value, 10) || 0;
+            
+            const useMCQ = document.getElementById('exam-type-mcq').checked;
+            const countMCQ = parseInt(document.getElementById('exam-count-mcq').value, 10) || 0;
+            
+            const useScramble = document.getElementById('exam-type-scramble').checked;
+            const countScramble = parseInt(document.getElementById('exam-count-scramble').value, 10) || 0;
+
+            if (!useE2C && !useC2E && !useMCQ && !useScramble) {
+                alert('請至少勾選一種題型！');
+                return;
+            }
+
+            // 3. 準備題庫池
             let poolWords = [];
             let poolQuiz = [];
             let poolScramble = [];
 
-            // 根據選擇準備題庫池
-            if (scope === 'current') {
-                poolWords = [...(gameData[selectedUnit].words || [])];
-                poolQuiz = [...(gameData[selectedUnit].popQuiz || [])];
-                poolScramble = [...(gameData[selectedUnit].sentenceScramble || [])];
-            } else {
-                for (let unit in gameData) {
-                    if (gameData[unit].words) poolWords.push(...gameData[unit].words);
-                    if (gameData[unit].popQuiz) poolQuiz.push(...gameData[unit].popQuiz);
-                    if (gameData[unit].sentenceScramble) poolScramble.push(...gameData[unit].sentenceScramble);
-                }
-            }
+            selectedUnits.forEach(unit => {
+                if (gameData[unit].words) poolWords.push(...gameData[unit].words);
+                if (gameData[unit].popQuiz) poolQuiz.push(...gameData[unit].popQuiz);
+                if (gameData[unit].sentenceScramble) poolScramble.push(...gameData[unit].sentenceScramble);
+            });
 
             // 隨機抽選且不重複的輔助函數
             const getUniqueItems = (arr, count, excludeList = []) => {
@@ -3176,19 +3276,138 @@
                 return shuffled.slice(0, Math.min(count, available.length));
             };
 
-            // 分配大題數量
-            const s1Size = Math.ceil(total / 4);
-            const s2Size = Math.ceil((total - s1Size) / 3);
-            const s3Size = Math.ceil((total - s1Size - s2Size) / 2);
-            const s4Size = total - s1Size - s2Size - s3Size;
+            // 4. 抽取題目
+            const engToChi = useE2C && countE2C > 0 ? getUniqueItems(poolWords, countE2C) : [];
+            const chiToEng = useC2E && countC2E > 0 ? getUniqueItems(poolWords, countC2E, engToChi) : []; // 盡量避免同單字出現在英翻中和中翻英
+            const mcq = useMCQ && countMCQ > 0 ? getUniqueItems(poolQuiz, countMCQ) : [];
+            const scramble = useScramble && countScramble > 0 ? getUniqueItems(poolScramble, countScramble) : [];
 
-            const engToChi = getUniqueItems(poolWords, s1Size);
-            const chiToEng = getUniqueItems(poolWords, s2Size, engToChi); // 避免同單字出現在英翻中和中翻英
-            const mcq = getUniqueItems(poolQuiz, s3Size);
-            const scramble = getUniqueItems(poolScramble, s4Size);
+            if (engToChi.length === 0 && chiToEng.length === 0 && mcq.length === 0 && scramble.length === 0) {
+                 alert('您選擇的題庫範圍可能沒有足夠的題目，或者您設定的題數為 0，無法生成考卷！');
+                 return;
+            }
+
+            // 關閉 Modal
+            examModal.style.display = 'none';
 
             // 考卷標題字串
-            const examTitle = scope === 'current' ? `Everybody Up 5 測驗卷 (${unitName})` : 'Everybody Up 5 總複習測驗卷 (Unit 1 - Unit 8)';
+            let examTitle = '';
+            if (selectedUnits.length === 8) {
+                examTitle = 'Everybody Up 5 總複習測驗卷 (Unit 1 - Unit 8)';
+            } else if (selectedUnits.length === 1) {
+                // 找出該單元的完整名稱
+                const opt = Array.from(unitSelect.options).find(o => o.value === selectedUnits[0]);
+                examTitle = `Everybody Up 5 測驗卷 (${opt ? opt.text : selectedUnits[0]})`;
+            } else {
+                examTitle = `Everybody Up 5 綜合測驗卷 (涵蓋 ${selectedUnits.length} 個單元)`;
+            }
+
+            // 動態產生大題 HTML
+            let sectionsHtml = '';
+            let ansSectionsHtml = '';
+            let sectionIndex = 1;
+            const cnyNums = ['一', '二', '三', '四', '五'];
+
+            if (engToChi.length > 0) {
+                const sectionLabel = `${cnyNums[sectionIndex-1]}、英翻中`;
+                sectionsHtml += `
+                    <div class="section">
+                        <div class="section-title">${sectionLabel}</div>
+                        ${engToChi.map((item, idx) => `
+                            <div class="question-item">
+                                ${idx + 1}. ${item.word}
+                                <span class="blank-line"></span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                ansSectionsHtml += `
+                    <div class="section">
+                        <div class="section-title">${sectionLabel}</div>
+                        ${engToChi.map((item, idx) => `<div class="ans-item">${idx + 1}. <strong>${item.chinese}</strong></div>`).join('')}
+                    </div>
+                `;
+                sectionIndex++;
+            }
+
+            if (chiToEng.length > 0) {
+                const sectionLabel = `${cnyNums[sectionIndex-1]}、中翻英`;
+                sectionsHtml += `
+                    <div class="section">
+                        <div class="section-title">${sectionLabel}</div>
+                        ${chiToEng.map((item, idx) => `
+                            <div class="question-item">
+                                ${idx + 1}. ${item.chinese}
+                                <span class="blank-line"></span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                ansSectionsHtml += `
+                    <div class="section">
+                        <div class="section-title">${sectionLabel}</div>
+                        ${chiToEng.map((item, idx) => `<div class="ans-item">${idx + 1}. <strong>${item.word}</strong></div>`).join('')}
+                    </div>
+                `;
+                sectionIndex++;
+            }
+
+            if (mcq.length > 0) {
+                const sectionLabel = `${cnyNums[sectionIndex-1]}、選擇題`;
+                sectionsHtml += `
+                    <div class="section">
+                        <div class="section-title">${sectionLabel}</div>
+                        ${mcq.map((q, idx) => {
+                            const ops = [...q.options].sort(() => 0.5 - Math.random());
+                            const labels = ['(A)', '(B)', '(C)', '(D)'];
+                            const correctIndex = ops.findIndex(o => o === q.answer);
+                            q.correctLabel = labels[correctIndex];
+
+                            return `
+                            <div class="question-item">
+                                ${idx + 1}. (____) ${q.question}
+                                <div class="options">
+                                    ${ops.map((o, i) => `<div>${labels[i]} ${o}</div>`).join('')}
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                ansSectionsHtml += `
+                    <div class="section">
+                        <div class="section-title">${sectionLabel}</div>
+                        ${mcq.map((q, idx) => `<div class="ans-item">${idx + 1}. <strong>${q.correctLabel} ${q.answer}</strong></div>`).join('')}
+                    </div>
+                `;
+                sectionIndex++;
+            }
+
+            if (scramble.length > 0) {
+                const sectionLabel = `${cnyNums[sectionIndex-1]}、句子重組`;
+                sectionsHtml += `
+                    <div class="section">
+                        <div class="section-title">${sectionLabel}</div>
+                        ${scramble.map((s, idx) => {
+                            const cleanStr = s.replace(/[.,?!]/g, "");
+                            const scrambledWords = cleanStr.split(" ").sort(() => 0.5 - Math.random()).join(" / ");
+                            return `
+                            <div class="question-item" style="margin-bottom: 35px;">
+                                ${idx + 1}. ${scrambledWords}
+                                <span class="blank-line" style="margin-top: 25px;"></span>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                ansSectionsHtml += `
+                    <div class="section">
+                        <div class="section-title">${sectionLabel}</div>
+                        ${scramble.map((s, idx) => `<div class="ans-item">${idx + 1}. <strong>${s}</strong></div>`).join('')}
+                    </div>
+                `;
+                sectionIndex++;
+            }
 
             // 組合 HTML
             const htmlContent = `
@@ -3344,90 +3563,14 @@
 
                         <!-- 題目區 (雙欄排版) -->
                         <div class="two-columns">
-                            
-                            <!-- 第一大題 -->
-                            <div class="section">
-                                <div class="section-title">一、英翻中 (\${engToChi.length} 題)</div>
-                                \${engToChi.map((item, idx) => \`
-                                    <div class="question-item">
-                                        \${idx + 1}. \${item.word}
-                                        <span class="blank-line"></span>
-                                    </div>
-                                \`).join('')}
-                            </div>
-
-                            <!-- 第二大題 -->
-                            <div class="section">
-                                <div class="section-title">二、中翻英 (\${chiToEng.length} 題)</div>
-                                \${chiToEng.map((item, idx) => \`
-                                    <div class="question-item">
-                                        \${idx + 1}. \${item.chinese}
-                                        <span class="blank-line"></span>
-                                    </div>
-                                \`).join('')}
-                            </div>
-
-                            <!-- 第三大題 -->
-                            <div class="section">
-                                <div class="section-title">三、選擇題 (\${mcq.length} 題)</div>
-                                \${mcq.map((q, idx) => {
-                                    // 隨機打亂選項
-                                    const ops = [...q.options].sort(() => 0.5 - Math.random());
-                                    const labels = ['(A)', '(B)', '(C)', '(D)'];
-                                    
-                                    // 為了後續解答正確記錄，找出正確答案被打亂後對應的選項代號 A/B/C/D
-                                    // 將這個代號儲存回題目物件中，方便解答區使用
-                                    const correctIndex = ops.findIndex(o => o === q.answer);
-                                    q.correctLabel = labels[correctIndex];
-
-                                    return \`
-                                    <div class="question-item">
-                                        \${idx + 1}. (____) \${q.question}
-                                        <div class="options">
-                                            \${ops.map((o, i) => \`<div>\${labels[i]} \${o}</div>\`).join('')}
-                                        </div>
-                                    </div>
-                                    \`;
-                                }).join('')}
-                            </div>
-
-                            <!-- 第四大題 -->
-                            <div class="section">
-                                <div class="section-title">四、句子重組 (\${scramble.length} 題)</div>
-                                \${scramble.map((s, idx) => {
-                                    // 移除標點並打亂單字，以 / 隔開
-                                    const cleanStr = s.replace(/[.,?!]/g, "");
-                                    const scrambledWords = cleanStr.split(" ").sort(() => 0.5 - Math.random()).join(" / ");
-                                    return \`
-                                    <div class="question-item">
-                                        \${idx + 1}. \${scrambledWords}
-                                        <span class="blank-line" style="margin-top: 30px;"></span>
-                                    </div>
-                                    \`;
-                                }).join('')}
-                            </div>
+                            \${sectionsHtml}
                         </div>
 
-                        <!-- 答案區 (預設隱藏，列印時若顯示會自動跳至新的一頁) -->
+                        <!-- 答案區 -->
                         <div class="answer-section" id="answer-section">
                             <h2 style="text-align: center; margin-top: 0; color: #1f2937;">解答 (Answer Key)</h2>
                             <div class="two-columns">
-                                <div class="section">
-                                    <div class="section-title">一、英翻中</div>
-                                    \${engToChi.map((item, idx) => \`<div class="ans-item">\${idx + 1}. <strong>\${item.chinese}</strong></div>\`).join('')}
-                                </div>
-                                <div class="section">
-                                    <div class="section-title">二、中翻英</div>
-                                    \${chiToEng.map((item, idx) => \`<div class="ans-item">\${idx + 1}. <strong>\${item.word}</strong></div>\`).join('')}
-                                </div>
-                                <div class="section">
-                                    <div class="section-title">三、選擇題</div>
-                                    \${mcq.map((q, idx) => \`<div class="ans-item">\${idx + 1}. <strong>\${q.correctLabel} \${q.answer}</strong></div>\`).join('')}
-                                </div>
-                                <div class="section">
-                                    <div class="section-title">四、句子重組</div>
-                                    \${scramble.map((s, idx) => \`<div class="ans-item">\${idx + 1}. <strong>\${s}</strong></div>\`).join('')}
-                                </div>
+                                \${ansSectionsHtml}
                             </div>
                         </div>
                     </div>
